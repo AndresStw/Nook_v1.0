@@ -1,0 +1,575 @@
+
+/* ================================
+   NOOK — LANDING / MURO DE VOCES
+================================ */
+
+.nook-landing {
+  --nook-mint: #14E5C0;
+  --nook-mint-dark: #087F70;
+  --nook-cream: #F8F7F1;
+  --nook-ink: #173D38;
+
+  position: relative;
+  isolation: isolate;
+  min-height: 100svh;
+  width: 100%;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: var(--nook-cream);
+  color: var(--nook-ink);
+}
+
+/* Fondo decorativo */
+
+.nook-landing::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 45%,
+      rgba(248, 247, 241, 0.98) 0%,
+      rgba(248, 247, 241, 0.94) 24%,
+      rgba(248, 247, 241, 0.65) 48%,
+      rgba(248, 247, 241, 0.12) 100%
+    );
+}
+
+/* ================================
+   CONTENEDOR DE MENSAJES
+================================ */
+
+.nook-voices {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.nook-voices__glow {
+  position: absolute;
+  width: 35rem;
+  height: 35rem;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.24;
+  background: var(--nook-mint);
+}
+
+.nook-voices__glow--one {
+  top: -20rem;
+  left: -12rem;
+}
+
+.nook-voices__glow--two {
+  right: -18rem;
+  bottom: -22rem;
+}
+
+/* ================================
+   TARJETAS FLOTANTES
+================================ */
+
+.nook-voice {
+  position: absolute;
+  width: clamp(190px, 20vw, 270px);
+  padding: 17px 19px;
+
+  border: 1px solid rgba(8, 127, 112, 0.13);
+  border-radius: 17px;
+
+  background: rgba(255, 255, 255, 0.47);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  box-shadow:
+    0 12px 35px rgba(23, 61, 56, 0.035);
+
+  opacity: 0;
+  color: var(--nook-ink);
+
+  animation:
+    nook-float-in 1.8s ease forwards,
+    nook-drift var(--duration, 28s)
+      ease-in-out var(--delay, 0s) infinite alternate;
+
+  will-change: transform;
+}
+
+.nook-voice__header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  margin-bottom: 12px;
+
+  font-size: 11px;
+  color: #6F9991;
+  letter-spacing: 0.01em;
+}
+
+.nook-voice__avatar {
+  width: 27px;
+  height: 27px;
+  flex-shrink: 0;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+  background: rgba(20, 229, 192, 0.22);
+  color: var(--nook-mint-dark);
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.nook-voice__dot {
+  color: var(--nook-mint-dark);
+}
+
+.nook-voice p {
+  margin: 0;
+
+  font-family: "Segoe Print", "Bradley Hand",
+    "Comic Sans MS", cursive;
+
+  font-size: clamp(13px, 1.15vw, 16px);
+  line-height: 1.6;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.nook-voice__heart {
+  display: block;
+  margin-top: 8px;
+  text-align: right;
+
+  color: var(--nook-mint-dark);
+  font-size: 20px;
+}
+
+/* Posiciones */
+
+.voice-1 {
+  top: 12%;
+  left: 5%;
+  --rotation: -5deg;
+  transform: rotate(-5deg);
+}
+
+.voice-2 {
+  top: 8%;
+  left: 37%;
+  --rotation: 4deg;
+  transform: rotate(4deg);
+}
+
+.voice-3 {
+  top: 14%;
+  right: 7%;
+  --rotation: 5deg;
+  transform: rotate(5deg);
+}
+
+.voice-4 {
+  top: 43%;
+  left: 2%;
+  --rotation: 3deg;
+  transform: rotate(3deg);
+}
+
+.voice-5 {
+  top: 42%;
+  right: 3%;
+  --rotation: -4deg;
+  transform: rotate(-4deg);
+}
+
+.voice-6 {
+  bottom: 12%;
+  left: 12%;
+  --rotation: 4deg;
+  transform: rotate(4deg);
+}
+
+.voice-7 {
+  bottom: 10%;
+  left: 42%;
+  --rotation: -3deg;
+  transform: rotate(-3deg);
+}
+
+.voice-8 {
+  bottom: 14%;
+  right: 9%;
+  --rotation: 4deg;
+  transform: rotate(4deg);
+}
+
+/* ================================
+   ANIMACIONES
+================================ */
+
+@keyframes nook-float-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 0.76;
+  }
+}
+
+@keyframes nook-drift {
+  0% {
+    transform:
+      translate3d(0, 0, 0)
+      rotate(var(--rotation, 0deg));
+  }
+
+  25% {
+    transform:
+      translate3d(12px, -15px, 0)
+      rotate(calc(var(--rotation, 0deg) + 1deg));
+  }
+
+  50% {
+    transform:
+      translate3d(-8px, -27px, 0)
+      rotate(calc(var(--rotation, 0deg) - 1deg));
+  }
+
+  75% {
+    transform:
+      translate3d(15px, -12px, 0)
+      rotate(calc(var(--rotation, 0deg) + 1deg));
+  }
+
+  100% {
+    transform:
+      translate3d(-10px, 8px, 0)
+      rotate(var(--rotation, 0deg));
+  }
+}
+
+/* ================================
+   CONTENIDO CENTRAL
+================================ */
+
+.nook-landing__content {
+  position: relative;
+  z-index: 2;
+
+  width: min(100%, 440px);
+  padding: 35px 24px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.nook-landing__logo {
+  margin-bottom: 22px;
+  color: var(--nook-mint-dark);
+}
+
+.nook-landing__tagline {
+  margin: 0;
+
+  font-size: clamp(23px, 3vw, 31px);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.055em;
+}
+
+.nook-landing__description {
+  margin: 20px 0 32px;
+
+  color: #72918A;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+/* ================================
+   BOTONES
+================================ */
+
+.nook-landing__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+
+  width: 100%;
+  max-width: 330px;
+}
+
+.nook-button {
+  min-height: 53px;
+  padding: 0 23px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+
+  border-radius: 999px;
+  text-decoration: none;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.nook-button:hover {
+  transform: translateY(-2px);
+}
+
+.nook-button--primary {
+  justify-content: space-between;
+
+  background: var(--nook-mint);
+  color: #063F38;
+
+  box-shadow:
+    0 10px 30px rgba(20, 229, 192, 0.18);
+}
+
+.nook-button--primary:hover {
+  background: #35EBCB;
+  box-shadow:
+    0 12px 35px rgba(20, 229, 192, 0.28);
+}
+
+.nook-button--primary span {
+  font-size: 21px;
+}
+
+.nook-button--secondary {
+  border: 1px solid rgba(8, 127, 112, 0.25);
+  background: rgba(255, 255, 255, 0.35);
+  color: var(--nook-ink);
+}
+
+.nook-button--secondary:hover {
+  background: rgba(20, 229, 192, 0.10);
+}
+
+/* ================================
+   FOOTER CENTRAL
+================================ */
+
+.nook-landing__footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-top: 27px;
+
+  color: #91A8A2;
+  font-size: 11px;
+}
+
+.nook-landing__footer-heart {
+  color: var(--nook-mint-dark);
+  font-size: 19px;
+}
+
+/* ================================
+   FIRMA INFERIOR
+================================ */
+
+.nook-landing__bottom {
+  position: absolute;
+  left: 32px;
+  bottom: 25px;
+
+  display: flex;
+  align-items: center;
+  gap: 15px;
+
+  color: #78948D;
+  font-size: 11px;
+}
+
+.nook-landing__mini-logo {
+  color: var(--nook-mint-dark);
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -0.08em;
+}
+
+/* ================================
+   TABLETS
+================================ */
+
+@media (max-width: 900px) {
+  .nook-voice {
+    width: 210px;
+    padding: 14px;
+  }
+
+  .voice-2,
+  .voice-7 {
+    display: none;
+  }
+
+  .voice-1 {
+    top: 8%;
+    left: 3%;
+  }
+
+  .voice-3 {
+    top: 10%;
+    right: 3%;
+  }
+
+  .voice-4 {
+    top: 44%;
+    left: -5%;
+  }
+
+  .voice-5 {
+    top: 44%;
+    right: -5%;
+  }
+
+  .voice-6 {
+    bottom: 9%;
+    left: 4%;
+  }
+
+  .voice-8 {
+    bottom: 8%;
+    right: 4%;
+  }
+}
+
+/* ================================
+   MÓVILES
+================================ */
+
+@media (max-width: 600px) {
+  .nook-landing {
+    min-height: 100svh;
+    padding: 24px 0;
+  }
+
+  .nook-landing__content {
+    width: 100%;
+    padding: 30px 25px;
+  }
+
+  .nook-landing__logo {
+    margin-bottom: 18px;
+  }
+
+  .nook-landing__description {
+    margin: 16px 0 27px;
+  }
+
+  .nook-voice {
+    width: 155px;
+    padding: 12px;
+
+    border-radius: 13px;
+    backdrop-filter: blur(5px);
+  }
+
+  .nook-voice__header {
+    gap: 6px;
+    margin-bottom: 7px;
+    font-size: 9px;
+  }
+
+  .nook-voice__avatar {
+    width: 22px;
+    height: 22px;
+    font-size: 10px;
+  }
+
+  .nook-voice p {
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .nook-voice__heart {
+    margin-top: 4px;
+    font-size: 16px;
+  }
+
+  .voice-1 {
+    top: 4%;
+    left: -30px;
+  }
+
+  .voice-3 {
+    top: 7%;
+    right: -28px;
+  }
+
+  .voice-4 {
+    top: 32%;
+    left: -76px;
+  }
+
+  .voice-5 {
+    top: 35%;
+    right: -76px;
+  }
+
+  .voice-6 {
+    bottom: 12%;
+    left: -45px;
+  }
+
+  .voice-8 {
+    bottom: 10%;
+    right: -45px;
+  }
+
+  .nook-landing__bottom {
+    left: 50%;
+    bottom: 13px;
+    width: max-content;
+    max-width: 100%;
+
+    transform: translateX(-50%);
+    gap: 9px;
+
+    font-size: 9px;
+  }
+
+  .nook-landing__mini-logo {
+    font-size: 19px;
+  }
+}
+
+/* ================================
+   ACCESIBILIDAD
+================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .nook-voice {
+    animation: none;
+    opacity: 0.55;
+    transform: rotate(var(--rotation, 0deg));
+  }
+
+  .nook-button {
+    transition: none;
+  }
+}

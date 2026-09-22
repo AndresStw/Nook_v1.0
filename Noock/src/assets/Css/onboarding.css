@@ -1,0 +1,146 @@
+/* ================================
+   NOOK — Onboarding
+================================ */
+
+/* Override del wrapper .nook-auth SOLO en onboarding */
+.nook-auth--onboarding {
+  height: 100svh;
+  max-height: 100svh;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.nook-onboarding {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 520px;
+  height: 100svh;
+  max-height: 100svh;
+  padding: 20px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.nook-onboarding__header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+
+.nook-onboarding__logo {
+  color: var(--nook-mint-dark);
+}
+
+.nook-onboarding__card {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  padding: 26px 24px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(8, 127, 112, 0.15);
+  box-shadow:
+    0 24px 60px rgba(23, 61, 56, 0.08),
+    0 2px 8px rgba(23, 61, 56, 0.04);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.nook-onboarding__title {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  text-align: center;
+  color: #173D38;
+  flex-shrink: 0;
+}
+
+.nook-onboarding__subtitle {
+  margin: 0 0 16px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  text-align: center;
+  color: #72918A;
+  flex-shrink: 0;
+}
+
+.nook-onboarding__content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.nook-onboarding__content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.nook-onboarding__content::-webkit-scrollbar-thumb {
+  background: rgba(8, 127, 112, 0.2);
+  border-radius: 2px;
+}
+
+.nook-onboarding__content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nook-onboarding__footer {
+  width: 100%;
+  margin-top: 14px;
+  flex-shrink: 0;
+}
+
+.nook-onboarding__footer .nook-auth__button {
+  min-height: 48px;
+}
+
+/* Wrapper del stepper (por si lo usas) */
+.nook-onboarding-stepper-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.nook-onboarding-stepper {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* Móvil */
+@media (max-width: 600px) {
+  .nook-onboarding {
+    padding: 14px 16px 18px;
+  }
+
+  .nook-onboarding__card {
+    padding: 22px 18px;
+    border-radius: 20px;
+  }
+
+  .nook-onboarding__title {
+    font-size: 18px;
+  }
+
+  .nook-onboarding__subtitle {
+    font-size: 12px;
+    margin-bottom: 14px;
+  }
+
+  .nook-onboarding__header {
+    margin-bottom: 12px;
+  }
+}

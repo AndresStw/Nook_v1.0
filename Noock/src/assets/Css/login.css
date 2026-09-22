@@ -1,0 +1,299 @@
+/* ================================
+   NOOK — LOGIN / REGISTRO
+================================ */
+
+.nook-auth {
+  --nook-mint: #14E5C0;
+  --nook-mint-dark: #087F70;
+  --nook-cream: #F8F7F1;
+  --nook-ink: #173D38;
+  --nook-ink-soft: #72918A;
+  --nook-border: rgba(8, 127, 112, 0.15);
+
+  position: relative;
+  isolation: isolate;
+  min-height: 100svh;
+  width: 100%;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: var(--nook-cream);
+  color: var(--nook-ink);
+  padding: 24px;
+}
+
+/* Fondo radial igual que el landing */
+.nook-auth::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse at 50% 45%,
+      rgba(248, 247, 241, 0.98) 0%,
+      rgba(248, 247, 241, 0.94) 24%,
+      rgba(248, 247, 241, 0.65) 48%,
+      rgba(248, 247, 241, 0.12) 100%
+    );
+}
+
+/* ================================
+   CARD CENTRAL
+================================ */
+
+.nook-auth__card {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  max-width: 400px;
+  padding: 38px 32px 32px;
+
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  border: 1px solid var(--nook-border);
+
+  box-shadow:
+    0 24px 60px rgba(23, 61, 56, 0.08),
+    0 2px 8px rgba(23, 61, 56, 0.04);
+}
+
+.nook-auth__logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+  color: var(--nook-mint-dark);
+}
+
+.nook-auth__title {
+  margin: 0 0 6px;
+
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  text-align: center;
+  color: var(--nook-ink);
+}
+
+.nook-auth__subtitle {
+  margin: 0 0 26px;
+
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--nook-ink-soft);
+}
+
+/* ================================
+   FORMULARIO
+================================ */
+
+.nook-auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nook-auth__field {
+  position: relative;
+}
+
+.nook-auth__field svg {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--nook-mint-dark);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.nook-auth__field input {
+  width: 100%;
+  padding: 14px 16px 14px 46px;
+
+  border-radius: 14px;
+  border: 1px solid var(--nook-border);
+
+  background: rgba(248, 247, 241, 0.7);
+  color: var(--nook-ink);
+
+  font-size: 14px;
+  font-family: inherit;
+
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.nook-auth__field input::placeholder {
+  color: #9BB3AD;
+}
+
+.nook-auth__field input:focus {
+  outline: none;
+  border-color: var(--nook-mint);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 4px rgba(20, 229, 192, 0.12);
+}
+
+/* Error */
+.nook-auth__error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 10px 14px;
+  border-radius: 12px;
+
+  background: rgba(220, 38, 38, 0.08);
+  color: #B91C1C;
+
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+/* ================================
+   BOTÓN PRINCIPAL
+================================ */
+
+.nook-auth__button {
+  margin-top: 6px;
+  min-height: 52px;
+  padding: 0 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  border: none;
+  border-radius: 999px;
+
+  background: var(--nook-mint);
+  color: #063F38;
+
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+
+  box-shadow: 0 10px 30px rgba(20, 229, 192, 0.22);
+
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease,
+    opacity 180ms ease;
+}
+
+.nook-auth__button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: #35EBCB;
+  box-shadow: 0 14px 38px rgba(20, 229, 192, 0.32);
+}
+
+.nook-auth__button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ================================
+   LINK SECUNDARIO
+================================ */
+
+.nook-auth__footer {
+  margin: 22px 0 0;
+  text-align: center;
+
+  font-size: 12.5px;
+  color: var(--nook-ink-soft);
+}
+
+.nook-auth__footer a {
+  color: var(--nook-mint-dark);
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 180ms ease;
+}
+
+.nook-auth__footer a:hover {
+  opacity: 0.75;
+  text-decoration: underline;
+}
+
+/* ================================
+   BOTÓN VOLVER (opcional)
+================================ */
+
+.nook-auth__back {
+  position: absolute;
+  top: 22px;
+  left: 22px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 8px 14px;
+  border-radius: 999px;
+
+  border: 1px solid var(--nook-border);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--nook-ink-soft);
+
+  font-size: 12px;
+  text-decoration: none;
+
+  transition: background 180ms ease, color 180ms ease;
+}
+
+.nook-auth__back:hover {
+  background: rgba(20, 229, 192, 0.10);
+  color: var(--nook-mint-dark);
+}
+
+/* ================================
+   MÓVIL
+================================ */
+
+@media (max-width: 600px) {
+  .nook-auth {
+    padding: 16px;
+  }
+
+  .nook-auth__card {
+    padding: 30px 22px 26px;
+    border-radius: 20px;
+  }
+
+  .nook-auth__title {
+    font-size: 20px;
+  }
+
+  .nook-auth__field input {
+    padding: 13px 14px 13px 42px;
+    font-size: 13.5px;
+  }
+}
+
+/* ================================
+   ACCESIBILIDAD
+================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .nook-auth__button,
+  .nook-auth__back,
+  .nook-auth__field input {
+    transition: none;
+  }
+}

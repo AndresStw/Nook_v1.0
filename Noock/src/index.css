@@ -1,0 +1,328 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+/* ============================
+   TEMA NOOK — CSS-First
+   Alineado con el universo Landing/Login
+   ============================ */
+@theme {
+  /* Fuentes */
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-handwritten: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+
+  /* Modo claro (default) — paleta Nook */
+  --color-bg: #F8F7F1;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-alt: #F1EFE7;
+  --color-bg-elevated: #FFFFFF;
+
+  /* Bordes — cálidos */
+  --color-border: #E5E2D8;
+  --color-border-soft: #EEEBE2;
+
+  /* Texto — verde oscuro Nook en vez de gris puro */
+  --color-text-primary: #173D38;
+  --color-text-secondary: #5C7A74;
+  --color-text-tertiary: #8FA8A2;
+  --color-text-disabled: #C4C4C4;
+
+  /* Acento menta — el color estrella de Nook */
+  --color-accent: #14E5C0;
+  --color-accent-hover: #0FC7A6;
+
+  /* Ink — verde profundo para botones oscuros y sidebar */
+  --color-ink: #173D38;
+  --color-ink-soft: #063F38;
+
+  /* Estados */
+  --color-success: #4ADE80;
+  --color-error: #F87171;
+  --color-warning: #FBBF24;
+  --color-info: #60A5FA;
+
+  /* Sombras — tintadas de verde Nook */
+  --shadow-soft: 0 2px 12px rgba(23, 61, 56, 0.04);
+  --shadow-card: 0 4px 20px rgba(23, 61, 56, 0.06);
+  --shadow-elevated: 0 8px 32px rgba(23, 61, 56, 0.08);
+
+  /* Animaciones */
+  --animate-heartbeat: heartbeat 2s ease-in-out infinite;
+  --animate-breathe: breathe 4s ease-in-out infinite;
+
+  @keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    15% { transform: scale(1.08); }
+    30% { transform: scale(1); }
+    45% { transform: scale(1.05); }
+    60% { transform: scale(1); }
+  }
+
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+  }
+
+  @keyframes shine {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+}
+
+/* ============================
+   TEMAS (solo cambian el acento)
+   ============================ */
+[data-theme="default"] {
+  --color-accent: #173D38;
+  --color-accent-hover: #0B2622;
+}
+
+[data-theme="menta"] {
+  --color-accent: #14E5C0;
+  --color-accent-hover: #0FC7A6;
+}
+
+[data-theme="ambar"] {
+  --color-accent: #E89B3C;
+  --color-accent-hover: #C97F2C;
+}
+
+[data-theme="violeta"] {
+  --color-accent: #A855F7;
+  --color-accent-hover: #9333EA;
+}
+
+[data-theme="coral"] {
+  --color-accent: #F26B5E;
+  --color-accent-hover: #E0504A;
+}
+
+[data-theme="azul"] {
+  --color-accent: #3FBFB0;
+  --color-accent-hover: #2A9E92;
+}
+
+[data-theme="dorado"] {
+  --color-accent: #D9A017;
+  --color-accent-hover: #B8850F;
+}
+
+[data-theme="rosa"] {
+  --color-accent: #E879B9;
+  --color-accent-hover: #D65AA2;
+}
+
+[data-theme="fundador"] {
+  --color-accent: #E11D48;
+  --color-accent-hover: #BE123C;
+}
+
+/* ============================
+   MODO OSCURO
+   ============================ */
+[data-mode="dark"] {
+  --color-bg: #0B0B10;
+  --color-bg-surface: #15151C;
+  --color-bg-alt: #1A1A22;
+  --color-bg-elevated: #1E1E28;
+  --color-border: #2A2A38;
+  --color-border-soft: #1F1F2A;
+  --color-text-primary: #F2F2F5;
+  --color-text-secondary: #A0A0B0;
+  --color-text-tertiary: #5A5A6E;
+  --color-text-disabled: #3A3A48;
+}
+
+/* ============================
+   BASE
+   ============================ */
+@layer base {
+  /* Base tipográfica legible — antes 11.6px, ahora 14px */
+  html {
+    font-size: 14px;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-tertiary);
+  }
+}
+
+/* ============================
+   UTILIDADES
+   ============================ */
+@utility badge-founder {
+  background: linear-gradient(90deg, #FBBF24, #F59E0B, #FBBF24);
+  background-size: 200% 100%;
+  animation: shine 5s linear infinite;
+  color: #0B0B10;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+
+@utility font-handwritten {
+  font-family: var(--font-handwritten);
+}
+
+@layer components {
+  .logo-sidebar {
+    height: 28px;
+    width: auto;
+  }
+
+  .logo-sidebar-sm {
+    height: 32px;
+    width: auto;
+  }
+}
+@layer utilities {
+  .animate-in {
+    animation: nook-modal-in 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes nook-modal-in {
+    from {
+      opacity: 0;
+      transform: scale(0.94) translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+}
+.animate-in {
+  animation: nook-modal-in 250ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes nook-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ================================
+   NOOK — Animaciones del Fundador
+================================ */
+
+/* Corona pulsante dorada */
+.founder-crown {
+  position: relative;
+  background: linear-gradient(135deg, #FBBF24, #F59E0B, #FBBF24);
+  background-size: 200% 200%;
+  animation: founder-crown-shine 3s ease-in-out infinite;
+  box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4);
+}
+
+@keyframes founder-crown-shine {
+  0%, 100% {
+    background-position: 0% 50%;
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4);
+  }
+  50% {
+    background-position: 100% 50%;
+    box-shadow: 0 0 15px 3px rgba(251, 191, 36, 0.3);
+  }
+}
+
+/* Anillo girando alrededor de la insignia */
+.founder-ring::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+  border-top-color: #FBBF24;
+  border-right-color: #F59E0B;
+  animation: founder-ring-spin 4s linear infinite;
+}
+
+@keyframes founder-ring-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Aura suave en la tarjeta del perfil */
+.founder-card-aura {
+  position: relative;
+}
+
+.founder-card-aura::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at top left,
+    rgba(251, 191, 36, 0.06) 0%,
+    transparent 50%
+  );
+  animation: founder-aura-pulse 5s ease-in-out infinite;
+}
+
+@keyframes founder-aura-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Nombre con brillo sutil */
+.founder-name {
+  background: linear-gradient(90deg, #173D38, #B8850F, #173D38);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: founder-name-shine 6s linear infinite;
+}
+
+@keyframes founder-name-shine {
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+/* Corazón del fundador con latido */
+.founder-heart {
+  animation: heartbeat 2s ease-in-out infinite;
+}
