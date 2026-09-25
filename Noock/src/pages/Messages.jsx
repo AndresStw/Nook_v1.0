@@ -1,30 +1,32 @@
-import { useState } from 'react'
-import { Search, MessageCircle, Clock } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import AppLayout from '../components/layout/AppLayout'
-import ChatPanel from '../components/chat/ChatPanel'
-import { useConversations } from '../hooks/useConversations'
-import { useBlindChats } from '../hooks/useBlindChats'
+import { useState } from "react";
+import { Search, MessageCircle, Clock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import AppLayout from "../components/layout/AppLayout";
+import ChatPanel from "../components/chat/ChatPanel";
+import { useConversations } from "../hooks/useConversations";
+import { useBlindChats } from "../hooks/useBlindChats";
 
 export default function Messages() {
-  const navigate = useNavigate()
-  const { conversations, loading } = useConversations()
-  const { blindChats, loading: loadingBlinds } = useBlindChats()
-  const [selectedId, setSelectedId] = useState(null)
-  const [search, setSearch] = useState('')
+  const navigate = useNavigate();
+  const { conversations, loading } = useConversations();
+  const { blindChats, loading: loadingBlinds } = useBlindChats();
+  const [selectedId, setSelectedId] = useState(null);
+  const [search, setSearch] = useState("");
 
   const filtered = conversations.filter((c) =>
-    c.other_name?.toLowerCase().includes(search.toLowerCase())
-  )
+    c.other_name?.toLowerCase().includes(search.toLowerCase()),
+  );
 
-  const selectedConv = conversations.find((c) => c.match_id === selectedId)
+  const selectedConv = conversations.find((c) => c.match_id === selectedId);
   const otherUser = selectedConv
     ? {
         id: selectedConv.other_user_id,
         name: selectedConv.other_name,
         photo: selectedConv.other_photo,
+        pi: selectedConv.other_pi || 0,
+        vip: selectedConv.other_vip_level,
       }
-    : null
+    : null;
 
   return (
     <AppLayout>
@@ -70,15 +72,16 @@ export default function Messages() {
                         {bc.other_alias}
                       </div>
                       <div className="text-[10px] text-text-tertiary truncate">
-                        {bc.status === 'active' && (
+                        {bc.status === "active" && (
                           <span className="inline-flex items-center gap-1">
                             <Clock size={9} />
                             En curso
                           </span>
                         )}
-                        {bc.status === 'finished' && 'Terminada - falta decidir'}
-                        {bc.status === 'matched' && '¡Match!'}
-                        {bc.status === 'passed' && 'Pasó'}
+                        {bc.status === "finished" &&
+                          "Terminada - falta decidir"}
+                        {bc.status === "matched" && "¡Match!"}
+                        {bc.status === "passed" && "Pasó"}
                       </div>
                     </div>
                   </button>
@@ -117,7 +120,10 @@ export default function Messages() {
           ) : (
             <div className="h-full flex items-center justify-center bg-bg-surface border border-border rounded-2xl">
               <div className="text-center">
-                <MessageCircle size={32} className="text-text-tertiary mx-auto mb-2" />
+                <MessageCircle
+                  size={32}
+                  className="text-text-tertiary mx-auto mb-2"
+                />
                 <p className="text-[13px] text-text-secondary">
                   Selecciona una conversación
                 </p>
@@ -127,25 +133,25 @@ export default function Messages() {
         </div>
       </div>
     </AppLayout>
-  )
+  );
 }
 
 function ChatListItem({ conv, active, onClick }) {
   const time = conv.last_message_at
-    ? new Date(conv.last_message_at).toLocaleTimeString('es-CO', {
-        hour: 'numeric',
-        minute: '2-digit',
+    ? new Date(conv.last_message_at).toLocaleTimeString("es-CO", {
+        hour: "numeric",
+        minute: "2-digit",
         hour12: true,
       })
-    : ''
+    : "";
 
   return (
     <button
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-3.5 py-3 transition-colors text-left border-l-2 ${
         active
-          ? 'bg-bg-alt border-accent'
-          : 'border-transparent hover:bg-bg-alt/60'
+          ? "bg-bg-alt border-accent"
+          : "border-transparent hover:bg-bg-alt/60"
       }`}
     >
       <div className="relative shrink-0">
@@ -157,7 +163,7 @@ function ChatListItem({ conv, active, onClick }) {
           />
         ) : (
           <div className="w-11 h-11 rounded-full bg-bg-alt flex items-center justify-center text-text-tertiary text-[13px]">
-            {conv.other_name?.[0] || '?'}
+            {conv.other_name?.[0] || "?"}
           </div>
         )}
       </div>
@@ -173,10 +179,14 @@ function ChatListItem({ conv, active, onClick }) {
         </div>
 
         <div className="flex items-center justify-between">
-          <p className={`text-[11.5px] truncate ${
-            conv.unread_count > 0 ? 'text-text-primary font-medium' : 'text-text-secondary'
-          }`}>
-            {conv.last_message || 'Di hola 👋'}
+          <p
+            className={`text-[11.5px] truncate ${
+              conv.unread_count > 0
+                ? "text-text-primary font-medium"
+                : "text-text-secondary"
+            }`}
+          >
+            {conv.last_message || "Di hola 👋"}
           </p>
           {conv.unread_count > 0 && (
             <span className="min-w-[16px] h-[16px] px-1 rounded-full bg-text-primary text-bg text-[9px] font-semibold flex items-center justify-center shrink-0 ml-2">
@@ -186,5 +196,5 @@ function ChatListItem({ conv, active, onClick }) {
         </div>
       </div>
     </button>
-  )
+  );
 }

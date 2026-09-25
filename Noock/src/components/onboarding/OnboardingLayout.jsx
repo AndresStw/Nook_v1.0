@@ -19,7 +19,7 @@ export default function OnboardingLayout({
 }) {
   return (
     <main className="nook-auth nook-auth--onboarding">
-  <WallOfVoices />
+      <WallOfVoices />
 
       <div className="nook-onboarding">
         {/* Header */}

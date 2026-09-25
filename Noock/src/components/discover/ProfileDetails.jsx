@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { MapPin, Sparkles, Heart, ChevronDown, ChevronUp } from "lucide-react";
 import Badges from "./Badges";
+import ProfileAttributes from "./ProfileAttributes";
+import PiBadge from "../ui/PiBadge";
 
 export default function ProfileDetails({ profile }) {
   const [expanded, setExpanded] = useState(false);
@@ -34,6 +36,9 @@ export default function ProfileDetails({ profile }) {
             "{profile.tagline}"
           </p>
         )}
+        <div className="flex items-center gap-2 mt-2">
+          <PiBadge pi={profile.pi || 0} size="sm" />
+        </div>
 
         <div className="flex items-center gap-1 text-[11px] text-text-tertiary">
           <MapPin size={11} />
@@ -85,6 +90,7 @@ export default function ProfileDetails({ profile }) {
 
         {expanded && (
           <>
+            <ProfileAttributes profile={profile} />
             {answers.length > 0 && (
               <div>
                 <div className="text-[10px] text-text-tertiary uppercase tracking-wider mb-2 flex items-center gap-1">

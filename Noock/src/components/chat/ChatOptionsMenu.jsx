@@ -1,5 +1,11 @@
-import { useState } from 'react'
-import { MoreHorizontal, BellOff, Archive, ShieldOff, Flag } from 'lucide-react'
+import { useState } from "react";
+import {
+  MoreHorizontal,
+  BellOff,
+  Archive,
+  ShieldOff,
+  Flag,
+} from "lucide-react";
 
 export default function ChatOptionsMenu({
   matchId,
@@ -9,22 +15,22 @@ export default function ChatOptionsMenu({
   onBlock,
   onReport,
 }) {
-  const [open, setOpen] = useState(false)
-  const [processing, setProcessing] = useState(false)
+  const [open, setOpen] = useState(false);
+  const [processing, setProcessing] = useState(false);
 
   const handleAction = async (action, callback, message) => {
-    if (processing) return
-    if (action === 'report') {
-      setOpen(false)
-      callback()
-      return
+    if (processing) return;
+    if (action === "report") {
+      setOpen(false);
+      callback();
+      return;
     }
-    if (!confirm(message)) return
-    setProcessing(true)
-    await callback()
-    setProcessing(false)
-    setOpen(false)
-  }
+    if (!confirm(message)) return;
+    setProcessing(true);
+    await callback();
+    setProcessing(false);
+    setOpen(false);
+  };
 
   return (
     <div className="relative">
@@ -39,15 +45,12 @@ export default function ChatOptionsMenu({
       {open && (
         <>
           {/* Overlay para cerrar */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setOpen(false)}
-          />
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
 
           <div className="absolute right-0 top-8 z-50 w-52 bg-bg-surface border border-border rounded-xl shadow-elevated overflow-hidden animate-in">
             <button
               onClick={() =>
-                handleAction('mute', onMute, '¿Silenciar esta conversación?')
+                handleAction("mute", onMute, "¿Silenciar esta conversación?")
               }
               disabled={processing}
               className="w-full flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-bg-alt transition-colors text-left disabled:opacity-50"
@@ -59,9 +62,9 @@ export default function ChatOptionsMenu({
             <button
               onClick={() =>
                 handleAction(
-                  'archive',
+                  "archive",
                   onArchive,
-                  '¿Archivar esta conversación? Desaparecerá de tu lista.'
+                  "¿Archivar esta conversación? Desaparecerá de tu lista.",
                 )
               }
               disabled={processing}
@@ -76,9 +79,9 @@ export default function ChatOptionsMenu({
             <button
               onClick={() =>
                 handleAction(
-                  'block',
+                  "block",
                   onBlock,
-                  '¿Bloquear a este usuario? No volverán a verse nunca.'
+                  "¿Bloquear a este usuario? No volverán a verse nunca.",
                 )
               }
               disabled={processing}
@@ -89,7 +92,7 @@ export default function ChatOptionsMenu({
             </button>
 
             <button
-              onClick={() => handleAction('report', onReport)}
+              onClick={() => handleAction("report", onReport)}
               disabled={processing}
               className="w-full flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-bg-alt transition-colors text-left disabled:opacity-50"
             >
@@ -100,5 +103,5 @@ export default function ChatOptionsMenu({
         </>
       )}
     </div>
-  )
+  );
 }

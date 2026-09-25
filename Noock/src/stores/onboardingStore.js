@@ -4,6 +4,8 @@ const initialState = {
   // Paso actual (1-7)
   step: 1,
 
+  basic: { name: "", city: "", birth_date: "" }, //nuevo
+
   // Fotos subidas (URLs)
   photos: [], // [{ url, position }]
 
@@ -16,6 +18,20 @@ const initialState = {
   // Intereses elegidos
   selectedInterestIds: [], // [1, 6, 13]
 
+  //informacion personal
+  details: {
+    // ← NUEVO
+    sexual_orientation: null,
+    marital_status: null,
+    has_kids: null,
+    personality: null,
+    smokes: null,
+    drinks: null,
+    religion: null,
+    height_cm: null,
+    languages: [],
+  },
+
   safetyRead: false, //Nuevo
 
   // Completado
@@ -24,13 +40,15 @@ const initialState = {
 
 export const useOnboardingStore = create((set, get) => ({
   ...initialState,
-  
 
   setStep: (step) => set({ step }),
   setSafetyRead: (value) => set({ safetyRead: value }),
-  nextStep: () => set((s) => ({ step: Math.min(s.step + 1, 8) })),
+  setBasic: (key, value) =>
+  set((s) => ({ basic: { ...s.basic, [key]: value } })),
+  nextStep: () => set((s) => ({ step: Math.min(s.step + 1, 10) })),
   prevStep: () => set((s) => ({ step: Math.max(s.step - 1, 1) })),
 
+  ///Metodos
   // Fotos
   addPhoto: (url, position) =>
     set((s) => ({
@@ -69,6 +87,25 @@ export const useOnboardingStore = create((set, get) => ({
         return { selectedInterestIds: selected.filter((i) => i !== id) };
       }
       return { selectedInterestIds: [...selected, id] };
+    }),
+
+  // NUEVO: manejar detalles
+  setDetail: (key, value) =>
+    set((s) => ({
+      details: { ...s.details, [key]: value },
+    })),
+
+  toggleLanguage: (lang) =>
+    set((s) => {
+      const langs = s.details.languages || [];
+      return {
+        details: {
+          ...s.details,
+          languages: langs.includes(lang)
+            ? langs.filter((l) => l !== lang)
+            : [...langs, lang],
+        },
+      };
     }),
 
   // Reset

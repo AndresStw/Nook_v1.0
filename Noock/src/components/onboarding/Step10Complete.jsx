@@ -46,16 +46,25 @@ export default function Step7Complete({ onBack }) {
         if (iErr) throw iErr;
       }
 
-      // 3. Marcar onboarding como completado
+      // 3. Marcar onboarding como completado + guardar detalles
       const { error: uErr } = await supabase
         .from("users")
         .update({
           onboarding_completed: true,
-          verified: true, // MVP: auto-verificar al completar
+          verified: true,
           last_active_at: new Date().toISOString(),
+          // Detalles del perfil
+          sexual_orientation: store.details.sexual_orientation,
+          marital_status: store.details.marital_status,
+          has_kids: store.details.has_kids,
+          personality: store.details.personality,
+          smokes: store.details.smokes,
+          drinks: store.details.drinks,
+          religion: store.details.religion,
+          height_cm: store.details.height_cm,
+          languages: store.details.languages || [],
         })
         .eq("id", user.id);
-      if (uErr) throw uErr;
 
       // 4. Refrescar perfil y resetear store
       await refetchProfile();
@@ -71,7 +80,7 @@ export default function Step7Complete({ onBack }) {
 
   return (
     <OnboardingLayout
-      step={8}
+      step={10}
       title="Todo listo 🎉"
       subtitle="Ya eres parte de Nook. Un lugar donde se conecta de verdad."
       onBack={onBack}

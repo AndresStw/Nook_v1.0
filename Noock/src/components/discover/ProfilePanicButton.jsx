@@ -1,23 +1,23 @@
-import { useState } from 'react'
+import { useState } from "react";
 
 export default function ProfilePanicButton({ onReport }) {
-  const [open, setOpen] = useState(false)
-  const [processing, setProcessing] = useState(false)
+  const [open, setOpen] = useState(false);
+  const [processing, setProcessing] = useState(false);
 
   const handleReport = async (reason) => {
-    if (processing) return
-    setProcessing(true)
-    await onReport(reason)
-    setProcessing(false)
-    setOpen(false)
-  }
+    if (processing) return;
+    setProcessing(true);
+    await onReport(reason);
+    setProcessing(false);
+    setOpen(false);
+  };
 
   return (
     <>
       <button
         onClick={(e) => {
-          e.stopPropagation()
-          setOpen(true)
+          e.stopPropagation();
+          setOpen(true);
         }}
         aria-label="Botón de pánico"
         className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm hover:bg-black/60 flex items-center justify-center transition-colors"
@@ -46,8 +46,8 @@ export default function ProfilePanicButton({ onReport }) {
         <div
           className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
           onClick={(e) => {
-            e.stopPropagation()
-            setOpen(false)
+            e.stopPropagation();
+            setOpen(false);
           }}
         >
           <div
@@ -66,7 +66,7 @@ export default function ProfilePanicButton({ onReport }) {
 
             <div className="flex flex-col gap-2">
               <button
-                onClick={() => handleReport('bored')}
+                onClick={() => handleReport("bored")}
                 disabled={processing}
                 className="w-full text-left p-3 rounded-xl border border-border hover:bg-bg-alt transition-colors disabled:opacity-50 flex items-start gap-3"
               >
@@ -82,7 +82,7 @@ export default function ProfilePanicButton({ onReport }) {
               </button>
 
               <button
-                onClick={() => handleReport('rude')}
+                onClick={() => handleReport("rude")}
                 disabled={processing}
                 className="w-full text-left p-3 rounded-xl border border-border hover:bg-bg-alt transition-colors disabled:opacity-50 flex items-start gap-3"
               >
@@ -98,7 +98,7 @@ export default function ProfilePanicButton({ onReport }) {
               </button>
 
               <button
-                onClick={() => handleReport('fake_profile')}
+                onClick={() => handleReport("fake_profile")}
                 disabled={processing}
                 className="w-full text-left p-3 rounded-xl border border-border hover:bg-bg-alt transition-colors disabled:opacity-50 flex items-start gap-3"
               >
@@ -114,7 +114,7 @@ export default function ProfilePanicButton({ onReport }) {
               </button>
 
               <button
-                onClick={() => handleReport('emergency')}
+                onClick={() => handleReport("emergency")}
                 disabled={processing}
                 className="w-full text-left p-3 rounded-xl border-2 border-error/40 hover:bg-error/5 transition-colors disabled:opacity-50 flex items-start gap-3"
               >
@@ -141,5 +141,5 @@ export default function ProfilePanicButton({ onReport }) {
         </div>
       )}
     </>
-  )
+  );
 }

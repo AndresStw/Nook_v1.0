@@ -1,17 +1,17 @@
-import { useState } from 'react'
-import { AlertCircle, X, Shield, Flag } from 'lucide-react'
+import { useState } from "react";
+import { AlertCircle, X, Shield, Flag } from "lucide-react";
 
 export default function BlindChatPanicButton({ onAbandon }) {
-  const [open, setOpen] = useState(false)
-  const [processing, setProcessing] = useState(false)
+  const [open, setOpen] = useState(false);
+  const [processing, setProcessing] = useState(false);
 
   const handleAbandon = async (reason) => {
-    if (processing) return
-    setProcessing(true)
-    await onAbandon(reason)
-    setProcessing(false)
-    setOpen(false)
-  }
+    if (processing) return;
+    setProcessing(true);
+    await onAbandon(reason);
+    setProcessing(false);
+    setOpen(false);
+  };
 
   return (
     <>
@@ -57,14 +57,15 @@ export default function BlindChatPanicButton({ onAbandon }) {
                 ¿Qué está pasando?
               </h2>
               <p className="text-[12px] text-text-secondary">
-                Salir de la cita a ciegas tiene consecuencias. Elige con honestidad.
+                Salir de la cita a ciegas tiene consecuencias. Elige con
+                honestidad.
               </p>
             </div>
 
             <div className="flex flex-col gap-2">
               {/* Opción 1: Me aburrí */}
               <button
-                onClick={() => handleAbandon('left_bored')}
+                onClick={() => handleAbandon("left_bored")}
                 disabled={processing}
                 className="w-full text-left p-3 rounded-xl border border-border hover:bg-bg-alt transition-colors disabled:opacity-50 flex items-start gap-3"
               >
@@ -84,7 +85,7 @@ export default function BlindChatPanicButton({ onAbandon }) {
 
               {/* Opción 2: Grosero */}
               <button
-                onClick={() => handleAbandon('left_rude')}
+                onClick={() => handleAbandon("left_rude")}
                 disabled={processing}
                 className="w-full text-left p-3 rounded-xl border border-border hover:bg-bg-alt transition-colors disabled:opacity-50 flex items-start gap-3"
               >
@@ -104,7 +105,7 @@ export default function BlindChatPanicButton({ onAbandon }) {
 
               {/* Opción 3: Emergencia */}
               <button
-                onClick={() => handleAbandon('left_emergency')}
+                onClick={() => handleAbandon("left_emergency")}
                 disabled={processing}
                 className="w-full text-left p-3 rounded-xl border-2 border-error/40 hover:bg-error/5 transition-colors disabled:opacity-50 flex items-start gap-3"
               >
@@ -139,5 +140,5 @@ export default function BlindChatPanicButton({ onAbandon }) {
         </div>
       )}
     </>
-  )
+  );
 }

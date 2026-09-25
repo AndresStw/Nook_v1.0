@@ -51,21 +51,49 @@
   --animate-breathe: breathe 4s ease-in-out infinite;
 
   @keyframes heartbeat {
-    0%, 100% { transform: scale(1); }
-    15% { transform: scale(1.08); }
-    30% { transform: scale(1); }
-    45% { transform: scale(1.05); }
-    60% { transform: scale(1); }
+
+    0%,
+    100% {
+      transform: scale(1);
+    }
+
+    15% {
+      transform: scale(1.08);
+    }
+
+    30% {
+      transform: scale(1);
+    }
+
+    45% {
+      transform: scale(1.05);
+    }
+
+    60% {
+      transform: scale(1);
+    }
   }
 
   @keyframes breathe {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.02); }
+
+    0%,
+    100% {
+      transform: scale(1);
+    }
+
+    50% {
+      transform: scale(1.02);
+    }
   }
 
   @keyframes shine {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    0% {
+      background-position: 200% 0;
+    }
+
+    100% {
+      background-position: -200% 0;
+    }
   }
 }
 
@@ -137,6 +165,7 @@
    BASE
    ============================ */
 @layer base {
+
   /* Base tipográfica legible — antes 11.6px, ahora 14px */
   html {
     font-size: 14px;
@@ -212,6 +241,7 @@
     width: auto;
   }
 }
+
 @layer utilities {
   .animate-in {
     animation: nook-modal-in 250ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -222,12 +252,14 @@
       opacity: 0;
       transform: scale(0.94) translateY(8px);
     }
+
     to {
       opacity: 1;
       transform: scale(1) translateY(0);
     }
   }
 }
+
 .animate-in {
   animation: nook-modal-in 250ms cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -237,6 +269,7 @@
     opacity: 0;
     transform: scale(0.94) translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -257,10 +290,13 @@
 }
 
 @keyframes founder-crown-shine {
-  0%, 100% {
+
+  0%,
+  100% {
     background-position: 0% 50%;
     box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4);
   }
+
   50% {
     background-position: 100% 50%;
     box-shadow: 0 0 15px 3px rgba(251, 191, 36, 0.3);
@@ -280,7 +316,9 @@
 }
 
 @keyframes founder-ring-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Aura suave en la tarjeta del perfil */
@@ -294,17 +332,22 @@
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  background: radial-gradient(
-    ellipse at top left,
-    rgba(251, 191, 36, 0.06) 0%,
-    transparent 50%
-  );
+  background: radial-gradient(ellipse at top left,
+      rgba(251, 191, 36, 0.06) 0%,
+      transparent 50%);
   animation: founder-aura-pulse 5s ease-in-out infinite;
 }
 
 @keyframes founder-aura-pulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 /* Nombre con brillo sutil */
@@ -318,8 +361,13 @@
 }
 
 @keyframes founder-name-shine {
-  0% { background-position: 200% center; }
-  100% { background-position: -200% center; }
+  0% {
+    background-position: 200% center;
+  }
+
+  100% {
+    background-position: -200% center;
+  }
 }
 
 /* Corazón del fundador con latido */

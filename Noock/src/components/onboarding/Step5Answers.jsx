@@ -1,36 +1,36 @@
-import { useEffect, useState } from 'react'
-import OnboardingLayout from './OnboardingLayout'
-import { useOnboardingStore } from '../../stores/onboardingStore'
-import { supabase } from '../../lib/supabase'
+import { useEffect, useState } from "react";
+import OnboardingLayout from "./OnboardingLayout";
+import { useOnboardingStore } from "../../stores/onboardingStore";
+import { supabase } from "../../lib/supabase";
 
 export default function Step4Answers({ onNext, onBack }) {
-  const { selectedQuestionIds, answers, setAnswer } = useOnboardingStore()
-  const [questions, setQuestions] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { selectedQuestionIds, answers, setAnswer } = useOnboardingStore();
+  const [questions, setQuestions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase
-        .from('questions')
-        .select('*')
-        .in('id', selectedQuestionIds)
+        .from("questions")
+        .select("*")
+        .in("id", selectedQuestionIds);
       // Ordenar igual que selectedQuestionIds
       const ordered = selectedQuestionIds
         .map((id) => data?.find((q) => q.id === id))
-        .filter(Boolean)
-      setQuestions(ordered)
-      setLoading(false)
-    }
-    if (selectedQuestionIds.length === 3) load()
-  }, [selectedQuestionIds])
+        .filter(Boolean);
+      setQuestions(ordered);
+      setLoading(false);
+    };
+    if (selectedQuestionIds.length === 3) load();
+  }, [selectedQuestionIds]);
 
   const allAnswered = selectedQuestionIds.every(
-    (id) => (answers[id] || '').trim().length >= 3
-  )
+    (id) => (answers[id] || "").trim().length >= 3,
+  );
 
   return (
     <OnboardingLayout
-      step={4}
+      step={5}
       title="Responde con honestidad"
       subtitle="Respuestas cortas y auténticas funcionan mejor que párrafos largos."
       onBack={onBack}
@@ -44,7 +44,7 @@ export default function Step4Answers({ onNext, onBack }) {
       ) : (
         <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
           {questions.map((q) => {
-            const value = answers[q.id] || ''
+            const value = answers[q.id] || "";
             return (
               <div key={q.id}>
                 <label className="text-[11px] text-text-secondary italic mb-1.5 block leading-snug">
@@ -62,10 +62,10 @@ export default function Step4Answers({ onNext, onBack }) {
                   {value.length} / 150
                 </div>
               </div>
-            )
+            );
           })}
         </div>
       )}
     </OnboardingLayout>
-  )
+  );
 }

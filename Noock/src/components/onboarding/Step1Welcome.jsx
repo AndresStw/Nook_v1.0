@@ -1,5 +1,5 @@
-import { Shield, Heart, Sparkles } from 'lucide-react'
-import OnboardingLayout from './OnboardingLayout'
+import { Shield, Heart, Sparkles } from "lucide-react";
+import OnboardingLayout from "./OnboardingLayout";
 
 export default function Step1Welcome({ onNext }) {
   return (
@@ -31,7 +31,8 @@ export default function Step1Welcome({ onNext }) {
               Chispazos diarios
             </div>
             <p className="text-[11.5px] text-text-secondary leading-relaxed">
-              Aleatoriamente te emparejamos con alguien para una cita a ciegas de 5 minutos.
+              Aleatoriamente te emparejamos con alguien para una cita a ciegas
+              de 5 minutos.
             </p>
           </div>
         </div>
@@ -43,7 +44,8 @@ export default function Step1Welcome({ onNext }) {
               Tu seguridad primero
             </div>
             <p className="text-[11.5px] text-text-secondary leading-relaxed">
-              Botón de pánico siempre visible. Reportes anónimos. Cero tolerancia al acoso.
+              Botón de pánico siempre visible. Reportes anónimos. Cero
+              tolerancia al acoso.
             </p>
           </div>
         </div>
@@ -53,5 +55,5 @@ export default function Step1Welcome({ onNext }) {
         </p>
       </div>
     </OnboardingLayout>
-  )
+  );
 }

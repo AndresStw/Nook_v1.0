@@ -33,13 +33,11 @@
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(
-      ellipse at 50% 45%,
+    radial-gradient(ellipse at 50% 45%,
       rgba(248, 247, 241, 0.98) 0%,
       rgba(248, 247, 241, 0.94) 24%,
       rgba(248, 247, 241, 0.65) 48%,
-      rgba(248, 247, 241, 0.12) 100%
-    );
+      rgba(248, 247, 241, 0.12) 100%);
 }
 
 /* ================================
@@ -291,6 +289,7 @@
 ================================ */
 
 @media (prefers-reduced-motion: reduce) {
+
   .nook-auth__button,
   .nook-auth__back,
   .nook-auth__field input {

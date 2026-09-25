@@ -43,7 +43,9 @@ export default function Landing() {
       </div>
 
       <div className="nook-landing__bottom">
-        <span className="nook-landing__mini-logo"><Logo size={23} /></span>
+        <span className="nook-landing__mini-logo">
+          <Logo size={23} />
+        </span>
         <span>Conexiones reales. Personas reales.</span>
       </div>
     </main>

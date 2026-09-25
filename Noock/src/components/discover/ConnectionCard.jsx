@@ -1,7 +1,11 @@
-import { Plane, Music, Film } from 'lucide-react'
+import { Plane, Music, Film } from "lucide-react";
 
-export default function ConnectionCard({ match, onSendMessage, onKeepExploring }) {
-  if (!match) return null
+export default function ConnectionCard({
+  match,
+  onSendMessage,
+  onKeepExploring,
+}) {
+  if (!match) return null;
 
   return (
     <div className="bg-bg-surface border border-border rounded-2xl p-5 shadow-soft flex flex-col items-center justify-center text-center h-full overflow-hidden">
@@ -9,10 +13,10 @@ export default function ConnectionCard({ match, onSendMessage, onKeepExploring }
       <div className="relative w-20 h-20 mb-5 shrink-0">
         {/* Círculo izquierdo — acento con opacidad */}
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-accent/25 border border-accent" />
-        
+
         {/* Círculo derecho — acento sólido */}
         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-accent/80" />
-        
+
         {/* Corazón en la intersección */}
         <div className="absolute inset-0 flex items-center justify-center">
           <svg
@@ -67,7 +71,7 @@ export default function ConnectionCard({ match, onSendMessage, onKeepExploring }
         La conexión no es casualidad. <span className="text-accent">♥</span>
       </p>
     </div>
-  )
+  );
 }
 
 function Tag({ icon: Icon, label }) {
@@ -76,5 +80,5 @@ function Tag({ icon: Icon, label }) {
       <Icon size={10} strokeWidth={1.8} />
       {label}
     </span>
-  )
+  );
 }

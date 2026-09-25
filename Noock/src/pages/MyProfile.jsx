@@ -1,404 +1,1169 @@
-import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { MapPin, Settings, Palette, Camera, Trash2, Save, LogOut, Loader2 } from 'lucide-react'
-import AppLayout from '../components/layout/AppLayout'
-import { useAuth } from '../hooks/useAuth'
-import { useTheme } from '../contexts/ThemeContext'
-import { usePhotos } from '../hooks/usePhotos'
-import { supabase } from '../lib/supabase'
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useTheme } from "../contexts/ThemeContext";
+import PiBadge from "../components/ui/PiBadge";
+import {
+  User,
+  MapPin,
+  Calendar,
+  Sparkles,
+  FileText,
+  Camera,
+  Trash2,
+  Plus,
+  Eye,
+  Loader2,
+  Check,
+  AlertCircle,
+  Lightbulb,
+  MessageCircle,
+  Lock,
+  Heart,
+  HelpCircle,
+  Palette,
+} from "lucide-react";
 
-const themes = [
-  { id: 'menta', name: 'Menta', color: '#14E5C0' },
-  { id: 'ambar', name: 'Ámbar', color: '#E89B3C' },
-  { id: 'violeta', name: 'Violeta', color: '#A855F7' },
-  { id: 'coral', name: 'Coral', color: '#F26B5E' },
-  { id: 'azul', name: 'Azul hielo', color: '#3FBFB0' },
-  { id: 'dorado', name: 'Dorado', color: '#D9A017' },
-  { id: 'rosa', name: 'Rosa suave', color: '#E879B9' },
-  { id: 'default', name: 'Default', color: '#000606dd' },
-  { id: 'fundador', name: '? ? ?', color: '#E11D48', locked: true },
-]
+import AppLayout from "../components/layout/AppLayout";
+import { useAuth } from "../hooks/useAuth";
+import { usePhotos } from "../hooks/usePhotos";
+import {
+  validateBio,
+  validateName,
+  validateTagline,
+} from "../lib/profileValidation";
+import { COLOMBIAN_CITIES, isValidCity } from "../lib/cities";
+import { supabase } from "../lib/supabase";
+import "../assets/Css/myprofile.css";
+
+const QUOTES = [
+  {
+    text: "Sé real, no perfecto. La gente conecta con personas, no con perfiles impecables.",
+    author: "Vale, Bogotá",
+  },
+  {
+    text: "Una buena conversación vale más que mil fotos perfectas.",
+    author: "Andrés, Medellín",
+  },
+  {
+    text: "Aquí no gana el más guapo. Gana el que habla de verdad.",
+    author: "Kevin, Fundador",
+  },
+  {
+    text: "No busques a alguien perfecto. Busca a alguien real.",
+    author: "Sofía, Cali",
+  },
+];
+
+const THEMES = [
+  { id: "menta", name: "Menta", color: "#14E5C0" },
+  { id: "ambar", name: "Ámbar", color: "#E89B3C" },
+  { id: "violeta", name: "Violeta", color: "#A855F7" },
+  { id: "coral", name: "Coral", color: "#F26B5E" },
+  { id: "azul", name: "Azul hielo", color: "#3FBFB0" },
+  { id: "dorado", name: "Dorado", color: "#D9A017" },
+  { id: "rosa", name: "Rosa suave", color: "#E879B9" },
+  { id: "default", name: "Default", color: "#173D38" },
+  { id: "fundador", name: "? ? ?", color: "#E11D48", locked: true },
+];
 
 export default function MyProfile() {
-  const navigate = useNavigate()
-  const { user, profile, refetchProfile, signOut } = useAuth()
-  const { theme: currentTheme, setTheme: setCurrentTheme } = useTheme()
-  const { uploadPhoto, deletePhoto, uploading } = usePhotos(user?.id)
+  const navigate = useNavigate();
+  const { user, profile, refetchProfile } = useAuth();
+  const { theme: currentTheme, setTheme: setCurrentTheme } = useTheme();
+  const {
+    uploadPhoto,
+    deletePhoto,
+    uploadVideo,
+    deleteVideo,
+    uploading,
+    limits: photoLimits,
+    refreshLimits,
+  } = usePhotos(user?.id);
 
+  const [tab, setTab] = useState("info");
   const [form, setForm] = useState({
-    name: '',
-    tagline: '',
-    bio: '',
-    city: '',
-    birth_date: '',
-  })
-  const [photos, setPhotos] = useState([])
-  const [saving, setSaving] = useState(false)
-  const [feedback, setFeedback] = useState(null)
+    name: "",
+    tagline: "",
+    bio: "",
+    city: "",
+    birth_date: "",
+  });
+  const [photos, setPhotos] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState(null);
+  const [nameInfo, setNameInfo] = useState({
+    changes_left: 2,
+    can_change: true,
+  });
+  const [errors, setErrors] = useState({});
+  const [quoteIndex, setQuoteIndex] = useState(0);
+
+  const [interestsList, setInterestsList] = useState([]);
+  const [interestsSelected, setInterestsSelected] = useState([]);
+  const [questionsList, setQuestionsList] = useState([]);
+  const [myAnswers, setMyAnswers] = useState([]);
+  const [realCounts, setRealCounts] = useState({
+    interests: 0,
+    questions: 0,
+    answers: 0,
+  });
+
   const fileInputRefs = {
     1: useRef(null),
     2: useRef(null),
     3: useRef(null),
-  }
+    4: useRef(null),
+    5: useRef(null),
+    6: useRef(null),
+  };
+  const videoInputRef = useRef(null);
 
-  // Cargar datos al montar
+  // ============ CARGA ============
   useEffect(() => {
-    if (profile) {
-      setForm({
-        name: profile.name || '',
-        tagline: profile.tagline || '',
-        bio: profile.bio || '',
-        city: profile.city || '',
-        birth_date: profile.birth_date || '',
-      })
-    }
-  }, [profile])
+    if (!profile) return;
+    setForm({
+      name: profile.name || "",
+      tagline: profile.tagline || "",
+      bio: profile.bio || "",
+      city: profile.city || "",
+      birth_date: profile.birth_date || "",
+    });
+  }, [profile]);
 
-  // Cargar fotos
   useEffect(() => {
-    if (!user) return
-    const load = async () => {
-      const { data } = await supabase
-        .from('photos')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('position')
-      setPhotos(data || [])
-    }
-    load()
-  }, [user])
+    if (!user) return;
+    supabase
+      .from("photos")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("position")
+      .then(({ data }) => setPhotos(data || []));
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.rpc("can_change_name", { p_user_id: user.id }).then(({ data }) => {
+      if (data) setNameInfo(data);
+    });
+  }, [user]);
+
+  useEffect(() => {
+    supabase
+      .from("interests")
+      .select("*")
+      .order("name")
+      .then(({ data }) => {
+        setInterestsList(data || []);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.rpc("get_my_interests").then(({ data }) => {
+      if (Array.isArray(data)) setInterestsSelected(data);
+    });
+  }, [user]);
+
+  useEffect(() => {
+    supabase
+      .from("questions")
+      .select("*")
+      .eq("active", true)
+      .then(({ data }) => {
+        setQuestionsList(data || []);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.rpc("get_my_answers").then(({ data }) => {
+      if (Array.isArray(data)) setMyAnswers(data);
+    });
+  }, [user]);
+
+  const refreshCounts = async () => {
+    const { data } = await supabase.rpc("get_my_counts");
+    if (data && !data.error) setRealCounts(data);
+  };
+
+  useEffect(() => {
+    if (user) refreshCounts();
+  }, [user, interestsSelected, myAnswers]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setQuoteIndex((i) => (i + 1) % QUOTES.length);
+    }, 8000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // ============ HANDLERS ============
+  const showToast = (message, type = "ok") => {
+    setFeedback({ message, type });
+    setTimeout(() => setFeedback(null), 3000);
+  };
 
   const handleChange = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const handlePhotoClick = (position) => {
-    fileInputRefs[position].current?.click()
-  }
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: null }));
+  };
 
   const handleFileChange = async (e, position) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
+    const file = e.target.files?.[0];
+    if (!file) return;
     try {
-      await uploadPhoto(file, position)
-      // Recargar fotos
+      await uploadPhoto(file, position);
       const { data } = await supabase
-        .from('photos')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('position')
-      setPhotos(data || [])
-      setFeedback({ type: 'ok', message: 'Foto actualizada' })
+        .from("photos")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("position");
+      setPhotos(data || []);
+      showToast("Foto actualizada", "ok");
     } catch (err) {
-      setFeedback({ type: 'error', message: err.message })
+      showToast(err.message, "error");
     }
-    e.target.value = '' // reset input
-  }
+    e.target.value = "";
+  };
 
   const handleDeletePhoto = async (position, url) => {
-    if (!confirm('¿Eliminar esta foto?')) return
+    if (!confirm("¿Eliminar esta foto?")) return;
     try {
-      await deletePhoto(position, url)
-      setPhotos((prev) => prev.filter((p) => p.position !== position))
-      setFeedback({ type: 'ok', message: 'Foto eliminada' })
+      await deletePhoto(position, url);
+      setPhotos((prev) => prev.filter((p) => p.position !== position));
+      showToast("Foto eliminada", "ok");
     } catch (err) {
-      setFeedback({ type: 'error', message: err.message })
+      showToast(err.message, "error");
     }
-  }
+  };
+
+  // === VIDEO HANDLERS ===
+  const handleVideoChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      await uploadVideo(file);
+      await refetchProfile();
+      showToast("Video subido con éxito 🎥", "ok");
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+    e.target.value = "";
+  };
+
+  const handleDeleteVideo = async () => {
+    if (!confirm("¿Eliminar tu video de presentación?")) return;
+    try {
+      await deleteVideo(profile.video_url);
+      await refetchProfile();
+      showToast("Video eliminado", "ok");
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  };
 
   const handleSave = async () => {
-    setSaving(true)
-    setFeedback(null)
+    const errs = {};
+    const nameCheck = validateName(form.name);
+    if (!nameCheck.valid) errs.name = nameCheck.error;
+    const tagCheck = validateTagline(form.tagline);
+    if (!tagCheck.valid) errs.tagline = tagCheck.error;
+    const bioCheck = validateBio(form.bio);
+    if (!bioCheck.valid) errs.bio = bioCheck.error;
+    if (form.city && !isValidCity(form.city)) {
+      errs.city = "Debes elegir una ciudad de la lista";
+    }
 
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      showToast("Revisa los errores", "error");
+      return;
+    }
+
+    setSaving(true);
     const { error } = await supabase
-      .from('users')
+      .from("users")
       .update({
         name: form.name.trim(),
         tagline: form.tagline.trim(),
         bio: form.bio.trim(),
         city: form.city.trim(),
-        birth_date: form.birth_date || null,
       })
-      .eq('id', user.id)
+      .eq("id", user.id);
 
     if (error) {
-      setFeedback({ type: 'error', message: error.message })
+      showToast(error.message, "error");
     } else {
-      await refetchProfile()
-      setFeedback({ type: 'ok', message: 'Cambios guardados' })
-      setTimeout(() => setFeedback(null), 3000)
+      await refetchProfile();
+      const { data } = await supabase.rpc("can_change_name", {
+        p_user_id: user.id,
+      });
+      if (data) setNameInfo(data);
+      showToast("Cambios guardados", "ok");
     }
-    setSaving(false)
-  }
+    setSaving(false);
+  };
 
-  const handleSignOut = async () => {
-    await signOut()
-    navigate('/login')
-  }
+  const handleSaveInterests = async () => {
+    if (interestsSelected.length < 3) {
+      showToast("Elige al menos 3 intereses", "error");
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase.rpc("save_my_interests", {
+      p_interest_ids: interestsSelected,
+    });
+    setSaving(false);
+    if (error) showToast(error.message, "error");
+    else {
+      showToast("Intereses guardados", "ok");
+      refreshCounts();
+    }
+  };
 
-  if (!profile) return null
+  const handleSaveAnswers = async () => {
+    const valid = myAnswers.filter((a) => a.answer?.trim().length >= 3);
+    if (valid.length !== 3) {
+      showToast("Responde exactamente 3 preguntas", "error");
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase.rpc("save_my_answers", {
+      p_answers: valid,
+    });
+    setSaving(false);
+    if (error) showToast(error.message, "error");
+    else {
+      showToast("Respuestas guardadas", "ok");
+      refreshCounts();
+    }
+  };
 
-  // Completar con slots vacíos hasta 3
-  const photoSlots = [1, 2, 3].map((pos) => {
-    const found = photos.find((p) => p.position === pos)
-    return found || { position: pos, url: null }
-  })
+  // ============ COMPLETITUD ============
+  const completeness = useMemo(() => {
+    const items = [];
+
+    const photosCount = Math.min(photos.length, 3);
+    items.push({
+      label: "Fotos",
+      done: photosCount >= 1,
+      count: `${photosCount}/3`,
+      current: photosCount,
+      target: 3,
+    });
+
+    const basicFilled = [
+      form.name,
+      form.tagline,
+      form.bio,
+      form.city,
+      form.birth_date,
+    ].filter(Boolean).length;
+    items.push({
+      label: "Información básica",
+      done: basicFilled === 5,
+      count: `${basicFilled}/5`,
+      current: basicFilled,
+      target: 5,
+    });
+
+    const interestsCount = Math.min(realCounts.interests || 0, 5);
+    items.push({
+      label: "Intereses",
+      done: interestsCount >= 3,
+      count: `${interestsCount}/5`,
+      current: interestsCount,
+      target: 5,
+    });
+
+    const questionsCount = Math.min(realCounts.questions || 0, 3);
+    items.push({
+      label: "Preguntas",
+      done: questionsCount >= 3,
+      count: `${questionsCount}/3`,
+      current: questionsCount,
+      target: 3,
+    });
+
+    const totalTargets = items.reduce((s, i) => s + i.target, 0);
+    const totalDone = items.reduce((s, i) => s + i.current, 0);
+    const percent = Math.round((totalDone / totalTargets) * 100);
+
+    return { items, percent };
+  }, [photos, form, realCounts]);
+
+  const currentQuote = QUOTES[quoteIndex];
+
+  if (!profile) return null;
 
   return (
     <AppLayout>
-      <div className="h-full overflow-y-auto">
-        <div className="max-w-3xl mx-auto pb-6">
-          {/* Header con acciones */}
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-bold text-text-primary">Mi perfil</h1>
-            <div className="flex gap-2">
+      <div className="profile-page">
+        <div className="profile-page__bg-quote profile-page__bg-quote--left">
+          Las mejores conexiones nacen de ser tú mismo.
+          <span className="heart">♡</span>
+        </div>
+        <div className="profile-page__bg-quote profile-page__bg-quote--right">
+          Aquí empieza algo bonito...
+          <span className="heart">♡</span>
+        </div>
+
+        <div className="profile-page__grid">
+          {/* Columna izquierda */}
+          <div>
+            {/* Header */}
+            <div className="profile-page__header">
+              {photos.find((p) => p.position === 1)?.url ? (
+                <img
+                  src={photos.find((p) => p.position === 1).url}
+                  alt="Yo"
+                  className="profile-page__avatar"
+                />
+              ) : (
+                <div className="profile-page__avatar profile-page__avatar--placeholder">
+                  {profile?.name?.[0] || "?"}
+                </div>
+              )}
+
+              <div className="profile-page__header-info">
+                <h1 className="profile-page__header-title">Mi perfil</h1>
+                <p className="profile-page__header-subtitle">
+                  Cuéntale al mundo quién eres
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <PiBadge pi={profile?.pi || 0} size="sm" />
+                  {profile?.vip_level && (
+                    <span className="text-[10.5px] font-semibold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">
+                      VIP {profile.vip_level}
+                    </span>
+                  )}
+                </div>
+              </div>
+
               <button
-                onClick={() => navigate('/settings')}
-                className="flex items-center gap-1.5 px-3 py-2 border border-border rounded-lg text-[12px] font-medium text-text-secondary hover:bg-bg-alt transition-colors"
+                onClick={() => navigate(`/u/${user?.id}`)}
+                className="profile-page__preview-btn"
               >
-                <Settings size={13} />
-                Ajustes
+                <Eye size={14} />
+                Vista previa
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="profile-editor__tabs">
+              <button
+                className={`profile-editor__tab ${tab === "info" ? "profile-editor__tab--active" : ""}`}
+                onClick={() => setTab("info")}
+              >
+                <User size={14} /> Perfil
               </button>
               <button
-                onClick={handleSignOut}
-                className="flex items-center gap-1.5 px-3 py-2 border border-border rounded-lg text-[12px] font-medium text-text-secondary hover:text-error hover:border-error/40 transition-colors"
+                className={`profile-editor__tab ${tab === "fotos" ? "profile-editor__tab--active" : ""}`}
+                onClick={() => setTab("fotos")}
               >
-                <LogOut size={13} />
-                Salir
+                <Camera size={14} /> Fotos
+              </button>
+              <button
+                className={`profile-editor__tab ${tab === "intereses" ? "profile-editor__tab--active" : ""}`}
+                onClick={() => setTab("intereses")}
+              >
+                <Heart size={14} /> Intereses
+                {interestsSelected.length > 0 && (
+                  <span className="profile-editor__tab-count">
+                    {interestsSelected.length}
+                  </span>
+                )}
+              </button>
+              <button
+                className={`profile-editor__tab ${tab === "preguntas" ? "profile-editor__tab--active" : ""}`}
+                onClick={() => setTab("preguntas")}
+              >
+                <HelpCircle size={14} /> Preguntas
+                {myAnswers.length > 0 && (
+                  <span className="profile-editor__tab-count">
+                    {myAnswers.length}
+                  </span>
+                )}
+              </button>
+              <button
+                className={`profile-editor__tab ${tab === "tema" ? "profile-editor__tab--active" : ""}`}
+                onClick={() => setTab("tema")}
+              >
+                <Palette size={14} /> Tema
               </button>
             </div>
-          </div>
 
-          {/* Feedback */}
-          {feedback && (
-            <div
-              className={`mb-4 px-4 py-2.5 rounded-xl text-[12px] font-medium ${
-                feedback.type === 'ok'
-                  ? 'bg-accent/10 text-accent-hover border border-accent/20'
-                  : 'bg-error/10 text-error border border-error/20'
-              }`}
-            >
-              {feedback.message}
-            </div>
-          )}
+            {/* === TAB INFO === */}
+            {tab === "info" && (
+              <div className="profile-card">
+                <div className="profile-card__header">
+                  <div className="profile-card__header-title">
+                    Información básica
+                  </div>
+                </div>
 
-          {/* Info principal */}
-          <div className="bg-bg-surface border border-border rounded-2xl p-5 shadow-soft mb-4">
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <div>
-                <label className="text-[10px] text-text-tertiary uppercase tracking-wider mb-1 block">
-                  Nombre
-                </label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={(e) => handleChange('name', e.target.value)}
-                  maxLength={40}
-                  className="w-full px-3 py-2 bg-bg-alt border border-border rounded-lg text-[13px] text-text-primary focus:outline-none focus:border-accent"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] text-text-tertiary uppercase tracking-wider mb-1 block">
-                  Ciudad
-                </label>
-                <input
-                  type="text"
-                  value={form.city}
-                  onChange={(e) => handleChange('city', e.target.value)}
-                  maxLength={30}
-                  className="w-full px-3 py-2 bg-bg-alt border border-border rounded-lg text-[13px] text-text-primary focus:outline-none focus:border-accent"
-                />
-              </div>
-            </div>
-
-            <div className="mb-3">
-              <label className="text-[10px] text-text-tertiary uppercase tracking-wider mb-1 block">
-                Fecha de nacimiento
-              </label>
-              <input
-                type="date"
-                value={form.birth_date}
-                onChange={(e) => handleChange('birth_date', e.target.value)}
-                className="w-full px-3 py-2 bg-bg-alt border border-border rounded-lg text-[13px] text-text-primary focus:outline-none focus:border-accent"
-              />
-            </div>
-
-            <div className="mb-3">
-              <label className="text-[10px] text-text-tertiary uppercase tracking-wider mb-1 block">
-                Tagline <span className="text-text-tertiary/60">({form.tagline.length}/60)</span>
-              </label>
-              <input
-                type="text"
-                value={form.tagline}
-                onChange={(e) => handleChange('tagline', e.target.value)}
-                maxLength={60}
-                placeholder="Una frase que te describa"
-                className="w-full px-3 py-2 bg-bg-alt border border-border rounded-lg text-[13px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-accent"
-              />
-            </div>
-
-            <div>
-              <label className="text-[10px] text-text-tertiary uppercase tracking-wider mb-1 block">
-                Bio <span className="text-text-tertiary/60">({form.bio.length}/500)</span>
-              </label>
-              <textarea
-                value={form.bio}
-                onChange={(e) => handleChange('bio', e.target.value)}
-                maxLength={500}
-                rows={4}
-                placeholder="Cuéntale a los demás quién eres..."
-                className="w-full px-3 py-2 bg-bg-alt border border-border rounded-lg text-[13px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-accent resize-none"
-              />
-            </div>
-          </div>
-
-          {/* Fotos */}
-          <div className="bg-bg-surface border border-border rounded-2xl p-5 shadow-soft mb-4">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-[14px] font-bold text-text-primary">Mis fotos</h2>
-              <span className="text-[11px] text-text-tertiary">
-                {photos.length} / 3
-              </span>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              {photoSlots.map((slot) => (
-                <div key={slot.position} className="relative aspect-square">
-                  {slot.url ? (
-                    <>
-                      <img
-                        src={slot.url}
-                        alt={`Foto ${slot.position}`}
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => handlePhotoClick(slot.position)}
-                          className="w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center transition-colors"
-                          title="Cambiar"
+                <div className="profile-field">
+                  <div className="profile-field__grid">
+                    <div>
+                      <label className="profile-field__label">
+                        Nombre
+                        <span
+                          className={`profile-field__hint ${!nameInfo.can_change ? "profile-field__hint--warn" : ""}`}
                         >
-                          <Camera size={14} className="text-text-primary" />
-                        </button>
-                        <button
-                          onClick={() => handleDeletePhoto(slot.position, slot.url)}
-                          className="w-8 h-8 rounded-full bg-white/90 hover:bg-error/90 flex items-center justify-center transition-colors group"
-                          title="Eliminar"
-                        >
-                          <Trash2 size={14} className="text-text-primary group-hover:text-white" />
-                        </button>
+                          {nameInfo.changes_left} cambio
+                          {nameInfo.changes_left !== 1 ? "s" : ""} disponible
+                          {nameInfo.changes_left !== 1 ? "s" : ""}
+                        </span>
+                      </label>
+                      <div className="profile-field__input-wrap">
+                        <User size={15} className="profile-field__input-icon" />
+                        <input
+                          type="text"
+                          value={form.name}
+                          onChange={(e) => handleChange("name", e.target.value)}
+                          maxLength={40}
+                          disabled={!nameInfo.can_change}
+                          placeholder="Tu nombre o alias"
+                          className={`profile-field__input ${errors.name ? "profile-field__input--error" : ""}`}
+                        />
                       </div>
+                      {errors.name && (
+                        <div className="profile-field__feedback profile-field__feedback--error">
+                          <AlertCircle size={11} /> {errors.name}
+                        </div>
+                      )}
+                      {!nameInfo.can_change && !errors.name && (
+                        <div className="profile-field__feedback profile-field__feedback--warn">
+                          <Lock size={11} /> Alcanzaste el límite de 2 cambios
+                          al mes
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="profile-field__label">Ciudad</label>
+                      <div className="profile-field__input-wrap">
+                        <MapPin
+                          size={15}
+                          className="profile-field__input-icon"
+                        />
+                        <input
+                          type="text"
+                          list="myprofile-cities"
+                          value={form.city}
+                          onChange={(e) => handleChange("city", e.target.value)}
+                          maxLength={30}
+                          placeholder="¿En qué ciudad estás?"
+                          className={`profile-field__input ${errors.city ? "profile-field__input--error" : ""}`}
+                        />
+                        <datalist id="myprofile-cities">
+                          {COLOMBIAN_CITIES.map((c) => (
+                            <option key={c} value={c} />
+                          ))}
+                        </datalist>
+                      </div>
+                      {errors.city && (
+                        <div className="profile-field__feedback profile-field__feedback--error">
+                          <AlertCircle size={11} /> {errors.city}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="profile-field">
+                  <label className="profile-field__label">
+                    Fecha de nacimiento
+                    <span className="profile-field__hint">🔒 Bloqueada</span>
+                  </label>
+                  <div className="profile-field__input-wrap">
+                    <Calendar size={15} className="profile-field__input-icon" />
+                    <input
+                      type="date"
+                      value={form.birth_date}
+                      disabled
+                      className="profile-field__input"
+                    />
+                  </div>
+                </div>
+
+                <div className="profile-field">
+                  <label className="profile-field__label">
+                    Tagline
+                    <span className="profile-field__hint">
+                      {form.tagline.length}/60
+                    </span>
+                  </label>
+                  <div className="profile-field__input-wrap">
+                    <Sparkles size={15} className="profile-field__input-icon" />
+                    <input
+                      type="text"
+                      value={form.tagline}
+                      onChange={(e) => handleChange("tagline", e.target.value)}
+                      maxLength={60}
+                      placeholder="Una frase que te describa"
+                      className={`profile-field__input ${errors.tagline ? "profile-field__input--error" : ""}`}
+                    />
+                  </div>
+                  {errors.tagline && (
+                    <div className="profile-field__feedback profile-field__feedback--error">
+                      <AlertCircle size={11} /> {errors.tagline}
+                    </div>
+                  )}
+                </div>
+
+                <div className="profile-field">
+                  <label className="profile-field__label">
+                    Bio
+                    <span className="profile-field__hint">
+                      {form.bio.length}/500
+                    </span>
+                  </label>
+                  <div className="profile-field__input-wrap">
+                    <FileText
+                      size={15}
+                      className="profile-field__input-icon"
+                      style={{ top: 18, transform: "none" }}
+                    />
+                    <textarea
+                      value={form.bio}
+                      onChange={(e) => handleChange("bio", e.target.value)}
+                      maxLength={500}
+                      rows={5}
+                      placeholder="Cuéntale a los demás quién eres..."
+                      className={`profile-field__textarea ${errors.bio ? "profile-field__textarea--error" : ""}`}
+                    />
+                  </div>
+                  {errors.bio ? (
+                    <div className="profile-field__feedback profile-field__feedback--error">
+                      <AlertCircle size={11} /> {errors.bio}
+                    </div>
+                  ) : (
+                    <div className="profile-field__feedback profile-field__feedback--info">
+                      <Check size={11} /> Sin enlaces, redes sociales ni números
+                      de teléfono
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="w-full mt-5 py-3 rounded-xl font-semibold text-[13px] flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-50"
+                  style={{
+                    background: "var(--color-accent)",
+                    color: "var(--color-ink-soft)",
+                    border: "none",
+                  }}
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />{" "}
+                      Guardando...
                     </>
                   ) : (
+                    <>
+                      <Check size={14} /> Guardar cambios
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* === TAB FOTOS === */}
+            {tab === "fotos" && (
+              <div className="profile-card">
+                <div className="profile-card__header">
+                  <div className="profile-card__header-title">
+                    <Camera size={16} /> Mis fotos
+                  </div>
+                  <span className="profile-card__counter">
+                    <Camera size={10} /> {photos.length}/
+                    {photoLimits?.max_photos || 3}
+                  </span>
+                </div>
+
+                <div className="profile-photos">
+                  {[1, 2, 3, 4, 5, 6].map((pos) => {
+                    const photo = photos.find((p) => p.position === pos);
+                    const isLocked =
+                      pos > 3 && (!photoLimits || photoLimits.pi < 3000);
+
+                    return (
+                      <div key={pos} className="profile-photo">
+                        {photo ? (
+                          <>
+                            <img src={photo.url} alt={`Foto ${pos}`} />
+                            <button
+                              onClick={() => handleDeletePhoto(pos, photo.url)}
+                              className="profile-photo__delete"
+                              title="Eliminar foto"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                            {pos === 1 && (
+                              <span className="profile-photo__badge">
+                                Principal
+                              </span>
+                            )}
+                          </>
+                        ) : isLocked ? (
+                          <button
+                            onClick={() =>
+                              showToast(
+                                `Te faltan ${photoLimits?.pi_needed_photos?.toLocaleString("es-CO") || 3000} PI para desbloquear esta foto`,
+                                "error",
+                              )
+                            }
+                            className="profile-photo--locked"
+                            title="Requiere 3000 PI"
+                          >
+                            <Lock size={16} />
+                            <span className="text-[9px] font-bold">
+                              3000 PI
+                            </span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => fileInputRefs[pos].current?.click()}
+                            disabled={uploading}
+                            className="profile-photo--empty"
+                          >
+                            {uploading ? (
+                              <Loader2 size={18} className="animate-spin" />
+                            ) : (
+                              <>
+                                <Plus size={18} />
+                                <span>Agregar foto</span>
+                              </>
+                            )}
+                          </button>
+                        )}
+                        <input
+                          ref={fileInputRefs[pos]}
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={(e) => handleFileChange(e, pos)}
+                          className="hidden"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* ============================================ */}
+                {/* VIDEO DE PRESENTACIÓN (solo PI >= 5000)     */}
+                {/* ============================================ */}
+                <div className="mt-6 pt-6 border-t border-border-soft">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[13px] font-bold text-text-primary">
+                        Video de presentación
+                      </span>
+                      <span className="text-[10px] text-text-tertiary">
+                        15 segundos máx.
+                      </span>
+                    </div>
+                    {profile?.video_url && (
+                      <span className="text-[10px] text-accent-hover font-semibold">
+                        ✓ Subido
+                      </span>
+                    )}
+                  </div>
+
+                  {profile?.video_url ? (
+                    <div className="relative rounded-2xl overflow-hidden bg-black aspect-video max-w-md">
+                      <video
+                        src={profile.video_url}
+                        controls
+                        playsInline
+                        className="w-full h-full object-contain"
+                      />
+                      <button
+                        onClick={handleDeleteVideo}
+                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm text-white flex items-center justify-center hover:bg-error transition-colors"
+                        title="Eliminar video"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ) : photoLimits?.can_add_video ? (
                     <button
-                      onClick={() => handlePhotoClick(slot.position)}
+                      onClick={() => videoInputRef.current?.click()}
                       disabled={uploading}
-                      className="w-full h-full rounded-lg border-2 border-dashed border-border hover:border-accent hover:bg-accent/5 transition-colors flex flex-col items-center justify-center gap-2 text-text-tertiary hover:text-accent disabled:opacity-50"
+                      className="w-full max-w-md aspect-video rounded-2xl border-2 border-dashed border-border hover:border-accent hover:bg-accent/5 transition-colors flex flex-col items-center justify-center gap-3 text-text-tertiary hover:text-accent disabled:opacity-50"
                     >
                       {uploading ? (
-                        <Loader2 size={18} className="animate-spin" />
+                        <Loader2 size={24} className="animate-spin" />
                       ) : (
                         <>
-                          <Camera size={20} />
-                          <span className="text-[10px] font-medium">Subir foto</span>
+                          <div className="text-3xl">🎥</div>
+                          <div className="text-[12px] font-semibold">
+                            Sube tu video de presentación
+                          </div>
+                          <div className="text-[10px] text-center max-w-[240px] leading-snug">
+                            MP4, MKV o WEBM · Máx. 15 segundos · 25MB
+                          </div>
                         </>
                       )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() =>
+                        showToast(
+                          `Te faltan ${photoLimits?.pi_needed_video?.toLocaleString("es-CO") || 5000} PI para desbloquear el video`,
+                          "error",
+                        )
+                      }
+                      className="w-full max-w-md aspect-video rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-3 transition-colors"
+                      style={{
+                        borderColor: "rgba(251, 191, 36, 0.4)",
+                        background:
+                          "linear-gradient(140deg, rgba(251, 191, 36, 0.06), rgba(251, 191, 36, 0.02))",
+                        color: "#B8850F",
+                      }}
+                    >
+                      <Lock size={24} />
+                      <div className="text-[12px] font-bold">5000 PI</div>
+                      <div className="text-[10px] text-center max-w-[220px] opacity-80 leading-snug">
+                        Necesitas 5000 PI para desbloquear el video de
+                        presentación
+                      </div>
                     </button>
                   )}
 
                   <input
-                    ref={fileInputRefs[slot.position]}
+                    ref={videoInputRef}
                     type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={(e) => handleFileChange(e, slot.position)}
+                    accept="video/mp4,video/x-matroska,video/webm"
+                    onChange={handleVideoChange}
                     className="hidden"
                   />
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
+
+            {/* === TAB INTERESES === */}
+            {tab === "intereses" && (
+              <div className="profile-card">
+                <div className="profile-card__header">
+                  <div className="profile-card__header-title">
+                    <Heart size={16} /> Tus intereses
+                  </div>
+                  <span className="profile-card__counter">
+                    <Heart size={10} /> {interestsSelected.length} seleccionados
+                  </span>
+                </div>
+
+                <p className="text-[12px] text-text-secondary mb-4">
+                  Elige mínimo 3. Aparecerán en tu perfil para conectar con
+                  gente afín.
+                </p>
+
+                <div className="flex flex-wrap gap-2">
+                  {interestsList.map((interest) => {
+                    const selected = interestsSelected.includes(interest.id);
+                    return (
+                      <button
+                        key={interest.id}
+                        type="button"
+                        onClick={() =>
+                          setInterestsSelected((prev) =>
+                            prev.includes(interest.id)
+                              ? prev.filter((i) => i !== interest.id)
+                              : [...prev, interest.id],
+                          )
+                        }
+                        className={`text-[12px] px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 ${
+                          selected
+                            ? "bg-accent text-bg border-accent font-semibold"
+                            : "bg-bg-alt border-border text-text-secondary hover:border-accent/40"
+                        }`}
+                      >
+                        <span>{interest.emoji}</span>
+                        {interest.name}
+                        {selected && <Check size={11} strokeWidth={3} />}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={handleSaveInterests}
+                  disabled={saving || interestsSelected.length < 3}
+                  className="w-full mt-6 py-3 rounded-xl font-semibold text-[13px] flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-50"
+                  style={{
+                    background: "var(--color-accent)",
+                    color: "var(--color-ink-soft)",
+                    border: "none",
+                  }}
+                >
+                  {saving ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Check size={14} />
+                  )}
+                  Guardar intereses
+                </button>
+              </div>
+            )}
+
+            {/* === TAB PREGUNTAS === */}
+            {tab === "preguntas" && (
+              <div className="profile-card">
+                <div className="profile-card__header">
+                  <div className="profile-card__header-title">
+                    <HelpCircle size={16} /> Tus preguntas
+                  </div>
+                  <span className="profile-card__counter">
+                    <HelpCircle size={10} /> {myAnswers.length}/3
+                  </span>
+                </div>
+
+                <p className="text-[12px] text-text-secondary mb-4">
+                  Elige 3 preguntas y respóndelas. Es lo primero que ven los
+                  demás.
+                </p>
+
+                <div className="space-y-4">
+                  {questionsList.map((q) => {
+                    const answerObj = myAnswers.find(
+                      (a) => a.question_id === q.id,
+                    );
+                    const answer = answerObj?.answer || "";
+                    return (
+                      <div key={q.id} className="profile-field">
+                        <label className="profile-field__label">
+                          {q.text}
+                          {answerObj && answer.trim().length >= 3 && (
+                            <span className="profile-field__hint text-accent">
+                              ✓ guardada
+                            </span>
+                          )}
+                        </label>
+                        <textarea
+                          value={answer}
+                          onChange={(e) => {
+                            const text = e.target.value;
+                            setMyAnswers((prev) => {
+                              const exists = prev.find(
+                                (a) => a.question_id === q.id,
+                              );
+                              if (exists) {
+                                return prev.map((a) =>
+                                  a.question_id === q.id
+                                    ? { ...a, answer: text }
+                                    : a,
+                                );
+                              }
+                              if (text.trim() && prev.length < 3) {
+                                return [
+                                  ...prev,
+                                  { question_id: q.id, answer: text },
+                                ];
+                              }
+                              return prev;
+                            });
+                          }}
+                          maxLength={150}
+                          rows={2}
+                          placeholder="Tu respuesta..."
+                          className="profile-field__textarea"
+                          style={{ minHeight: "60px" }}
+                        />
+                        <div className="profile-field__feedback profile-field__feedback--info">
+                          {answer.length} / 150
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={handleSaveAnswers}
+                  disabled={saving}
+                  className="w-full mt-6 py-3 rounded-xl font-semibold text-[13px] flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-50"
+                  style={{
+                    background: "var(--color-accent)",
+                    color: "var(--color-ink-soft)",
+                    border: "none",
+                  }}
+                >
+                  {saving ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Check size={14} />
+                  )}
+                  Guardar respuestas
+                </button>
+              </div>
+            )}
+
+            {/* === TAB TEMA === */}
+            {tab === "tema" && (
+              <div className="profile-card">
+                <div className="profile-card__header">
+                  <div className="profile-card__header-title">
+                    <Palette size={16} /> Tema de la app
+                  </div>
+                </div>
+                <p className="text-[12px] text-text-secondary mb-4">
+                  Elige el color que más te represente. Se aplica en toda la app
+                  y se guarda en tu cuenta.
+                </p>
+
+                <div className="grid grid-cols-4 gap-2.5">
+                  {THEMES.map((theme) => {
+                    const isLocked = theme.locked;
+                    const isSelected = currentTheme === theme.id;
+                    return (
+                      <button
+                        key={theme.id}
+                        disabled={isLocked}
+                        onClick={() => {
+                          if (isLocked) return;
+                          setCurrentTheme(theme.id);
+                        }}
+                        className={`relative flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${
+                          isLocked
+                            ? "border-border/40 bg-bg-alt/30 cursor-not-allowed opacity-50"
+                            : isSelected
+                              ? "border-text-primary bg-bg-alt"
+                              : "border-border hover:border-text-secondary hover:bg-bg-alt/50"
+                        }`}
+                      >
+                        <div
+                          className="w-7 h-7 rounded-full border-2 relative flex items-center justify-center"
+                          style={{
+                            backgroundColor: theme.color,
+                            borderColor: isSelected ? "#1A1A1A" : "transparent",
+                            filter: isLocked ? "grayscale(100%)" : "none",
+                          }}
+                        >
+                          {isLocked && (
+                            <span className="absolute inset-0 flex items-center justify-center text-white font-bold text-[14px] drop-shadow-md">
+                              ✕
+                            </span>
+                          )}
+                          {isSelected && !isLocked && (
+                            <Check
+                              size={14}
+                              className="text-white drop-shadow"
+                              strokeWidth={3}
+                            />
+                          )}
+                        </div>
+                        <span
+                          className={`text-[10px] font-medium ${isLocked ? "text-text-tertiary" : "text-text-secondary"}`}
+                        >
+                          {theme.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Selector de tema */}
-          <div className="bg-bg-surface border border-border rounded-2xl p-5 shadow-soft mb-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Palette size={16} className="text-text-secondary" />
-              <h2 className="text-[14px] font-bold text-text-primary">
-                Color de tu perfil
-              </h2>
-            </div>
-            <p className="text-[11.5px] text-text-secondary mb-4">
-              Elige el color que más te represente. Se aplica a toda la app.
-            </p>
+          {/* Columna derecha */}
+          <aside className="profile-side">
+            <div className="profile-progress">
+              <div className="profile-progress__header">
+                <div className="profile-progress__ring">
+                  <svg width="60" height="60" viewBox="0 0 60 60">
+                    <circle
+                      cx="30"
+                      cy="30"
+                      r="26"
+                      className="profile-progress__ring-bg"
+                    />
+                    <circle
+                      cx="30"
+                      cy="30"
+                      r="26"
+                      className="profile-progress__ring-fill"
+                      strokeDasharray={2 * Math.PI * 26}
+                      strokeDashoffset={
+                        2 * Math.PI * 26 * (1 - completeness.percent / 100)
+                      }
+                    />
+                  </svg>
+                  <div className="profile-progress__percent">
+                    {completeness.percent}%
+                  </div>
+                </div>
+                <div>
+                  <div className="profile-progress__title">Tu perfil</div>
+                  <div className="profile-progress__subtitle">
+                    {completeness.percent}% completo
+                  </div>
+                </div>
+              </div>
 
-            <div className="grid grid-cols-4 gap-2.5">
-              {themes.map((theme) => {
-                const isLocked = theme.locked
-                const isSelected = currentTheme === theme.id
-
-                return (
-                  <button
-                    key={theme.id}
-                    title={isLocked ? 'Tema bloqueado.' : theme.name}
-                    onClick={() => {
-                      if (isLocked) return
-                      setCurrentTheme(theme.id)
-                    }}
-                    disabled={isLocked}
-                    className={`relative flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${
-                      isLocked
-                        ? 'border-border/40 bg-bg-alt/30 cursor-not-allowed opacity-50'
-                        : isSelected
-                          ? 'border-text-primary bg-bg-alt'
-                          : 'border-border hover:border-text-secondary hover:bg-bg-alt/50'
-                    }`}
+              <div className="profile-progress__list">
+                {completeness.items.map((item, i) => (
+                  <div
+                    key={i}
+                    className={`profile-progress__item ${item.done ? "profile-progress__item--done" : ""}`}
                   >
                     <div
-                      className="w-7 h-7 rounded-full border-2 relative flex items-center justify-center"
-                      style={{
-                        backgroundColor: theme.color,
-                        borderColor: isSelected ? '#1A1A1A' : 'transparent',
-                        filter: isLocked ? 'grayscale(100%)' : 'none',
-                      }}
+                      className={`profile-progress__check ${item.done ? "profile-progress__check--done" : "profile-progress__check--pending"}`}
                     >
-                      {isLocked && (
-                        <span className="absolute inset-0 flex items-center justify-center text-white font-bold text-[14px] drop-shadow-md">
-                          ✕
-                        </span>
-                      )}
+                      {item.done && <Check size={11} strokeWidth={3} />}
                     </div>
-                    <span
-                      className={`text-[10px] font-medium ${
-                        isLocked ? 'text-text-tertiary' : 'text-text-secondary'
-                      }`}
-                    >
-                      {theme.name}
+                    <span className="profile-progress__item-label">
+                      {item.label}
                     </span>
-                  </button>
-                )
-              })}
+                    <span className="profile-progress__item-count">
+                      {item.count}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Guardar */}
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="w-full py-3 bg-accent text-bg rounded-xl font-medium text-[13px] hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {saving ? (
-              <>
-                <Loader2 size={14} className="animate-spin" />
-                Guardando...
-              </>
-            ) : (
-              <>
-                <Save size={14} />
-                Guardar cambios
-              </>
-            )}
-          </button>
+            <div className="profile-tip">
+              <div className="profile-tip__icon">
+                <Lightbulb size={14} />
+              </div>
+              <p className="profile-tip__text">
+                Un perfil completo recibe hasta{" "}
+                <strong>3 veces más visitas</strong>.
+              </p>
+            </div>
+
+            <div className="profile-quote">
+              <div className="profile-quote__header">
+                <MessageCircle size={14} /> Consejos de la comunidad
+              </div>
+              <p className="profile-quote__text">"{currentQuote.text}"</p>
+              <p className="profile-quote__author">— {currentQuote.author}</p>
+              <div className="profile-quote__dots">
+                {QUOTES.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setQuoteIndex(i)}
+                    className={`profile-quote__dot ${i === quoteIndex ? "profile-quote__dot--active" : ""}`}
+                    aria-label={`Quote ${i + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
+
+      {feedback && (
+        <div className={`profile-toast profile-toast--${feedback.type}`}>
+          {feedback.type === "ok" ? (
+            <Check size={14} />
+          ) : (
+            <AlertCircle size={14} />
+          )}
+          {feedback.message}
+        </div>
+      )}
     </AppLayout>
-  )
+  );
 }

@@ -1,7 +1,7 @@
-import { MapPin } from 'lucide-react'
+import { MapPin } from "lucide-react";
 
 export default function MorePeople({ people, onSeeAll }) {
-  if (!people?.length) return null
+  if (!people?.length) return null;
 
   return (
     <section className="h-full flex flex-col">
@@ -19,7 +19,7 @@ export default function MorePeople({ people, onSeeAll }) {
 
       <div className="flex-1 min-h-0 grid grid-cols-5 gap-2.5">
         {people.map((person) => {
-          const photo = person.photos?.[0]?.url || ''
+          const photo = person.photos?.[0]?.url || "";
           return (
             <button
               key={person.id}
@@ -38,17 +38,17 @@ export default function MorePeople({ people, onSeeAll }) {
               <div className="absolute inset-x-0 bottom-0 p-2 text-white">
                 <div className="text-[11px] font-semibold mb-0.5 truncate">
                   {person.name}
-                  {person.age ? `, ${person.age}` : ''}
+                  {person.age ? `, ${person.age}` : ""}
                 </div>
                 <div className="flex items-center gap-1 text-[9px] text-white/85">
                   <MapPin size={8} />
-                  {person.city || 'Bogotá'}
+                  {person.city || "Bogotá"}
                 </div>
               </div>
             </button>
-          )
+          );
         })}
       </div>
     </section>
-  )
+  );
 }

@@ -1,5 +1,5 @@
-import Sidebar from './Sidebar'
-import TopBar from './Topbar'
+import Sidebar from "./Sidebar";
+import TopBar from "./Topbar";
 
 export default function AppLayout({ children, user }) {
   return (
@@ -10,11 +10,9 @@ export default function AppLayout({ children, user }) {
         <TopBar user={user} />
 
         <main className="flex-1 min-h-0 overflow-hidden px-5 pb-4">
-          <div className="w-full h-full">
-            {children}
-          </div>
+          <div className="w-full h-full">{children}</div>
         </main>
       </div>
     </div>
-  )
+  );
 }

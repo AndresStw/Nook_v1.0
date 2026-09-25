@@ -145,7 +145,7 @@ export default function Step7SecurityRules({ onNext, onBack }) {
 
   return (
     <OnboardingLayout
-      step={7}
+      step={9}
       title="Antes de empezar"
       subtitle="Estas reglas te protegen. Léelas con calma."
       onBack={onBack}

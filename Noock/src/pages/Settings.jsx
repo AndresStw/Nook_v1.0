@@ -1,52 +1,52 @@
-import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Lock, Trash2, LogOut } from 'lucide-react'
-import AppLayout from '../components/layout/AppLayout'
-import { useAuth } from '../hooks/useAuth'
-import { supabase } from '../lib/supabase'
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Lock, Trash2, LogOut } from "lucide-react";
+import AppLayout from "../components/layout/AppLayout";
+import { useAuth } from "../hooks/useAuth";
+import { supabase } from "../lib/supabase";
 
 export default function Settings() {
-  const navigate = useNavigate()
-  const { user, signOut } = useAuth()
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
   const handlePasswordReset = async () => {
     const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
       redirectTo: `${window.location.origin}/settings`,
-    })
-    if (error) alert('Error: ' + error.message)
-    else alert('Te enviamos un correo para cambiar tu contraseña.')
-  }
+    });
+    if (error) alert("Error: " + error.message);
+    else alert("Te enviamos un correo para cambiar tu contraseña.");
+  };
 
   const handleDeleteAccount = async () => {
     const confirmed = confirm(
-      '¿Eliminar tu cuenta? Esta acción no se puede deshacer.'
-    )
-    if (!confirmed) return
+      "¿Eliminar tu cuenta? Esta acción no se puede deshacer.",
+    );
+    if (!confirmed) return;
 
     // Nota: eliminar auth.users requiere una Edge Function con service_role.
     // Por ahora solo marcamos el perfil como eliminado.
     const { error } = await supabase
-      .from('users')
+      .from("users")
       .update({ banned: true })
-      .eq('id', user.id)
+      .eq("id", user.id);
 
-    if (error) alert('Error: ' + error.message)
+    if (error) alert("Error: " + error.message);
     else {
-      await signOut()
-      navigate('/')
+      await signOut();
+      navigate("/");
     }
-  }
+  };
 
   const handleSignOut = async () => {
-    await signOut()
-    navigate('/login')
-  }
+    await signOut();
+    navigate("/login");
+  };
 
   return (
     <AppLayout>
       <div className="h-full overflow-y-auto">
         <div className="max-w-2xl mx-auto pb-6">
           <button
-            onClick={() => navigate('/me')}
+            onClick={() => navigate("/me")}
             className="flex items-center gap-1.5 text-[12px] text-text-secondary hover:text-text-primary transition-colors mb-4"
           >
             <ArrowLeft size={14} />
@@ -104,5 +104,5 @@ export default function Settings() {
         </div>
       </div>
     </AppLayout>
-  )
+  );
 }

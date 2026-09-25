@@ -1,4 +1,4 @@
-export default function Stepper({ currentStep, totalSteps = 8 }) {
+export default function Stepper({ currentStep, totalSteps = 10 }) {
   return (
     <div className="nook-onboarding-stepper flex items-center gap-1.5">
       {Array.from({ length: totalSteps }).map((_, i) => {

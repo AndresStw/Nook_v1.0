@@ -1,20 +1,20 @@
-import { Navigate } from 'react-router-dom'
-import { useAuth } from '../../hooks/useAuth'
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function ProtectedRoute({ children, requireOnboarding = true }) {
-  const { user, profile, loading } = useAuth()
+  const { user, profile, loading } = useAuth();
 
   if (loading) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
         <div className="text-text-secondary text-[13px]">Cargando...</div>
       </div>
-    )
+    );
   }
 
   // Sin sesión → login
   if (!user) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/login" replace />;
   }
 
   // Sesión pero sin perfil → algo falló en el trigger
@@ -30,13 +30,13 @@ export default function ProtectedRoute({ children, requireOnboarding = true }) {
           </p>
         </div>
       </div>
-    )
+    );
   }
 
   // Sesión con perfil pero sin onboarding → onboarding
   if (requireOnboarding && !profile.onboarding_completed) {
-    return <Navigate to="/onboarding" replace />
+    return <Navigate to="/onboarding" replace />;
   }
 
-  return children
+  return children;
 }

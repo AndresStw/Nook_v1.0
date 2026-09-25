@@ -1,0 +1,18 @@
+export const COLOMBIAN_CITIES = [
+  "Bogotá", "Medellín", "Cali", "Barranquilla", "Cartagena",
+  "Bucaramanga", "Pereira", "Santa Marta", "Ibagué", "Manizales",
+  "Villavicencio", "Pasto", "Montería", "Valledupar", "Neiva",
+  "Armenia", "Popayán", "Sincelejo", "Tunja", "Riohacha",
+  "Quibdó", "Florencia", "Yopal", "Mocoa", "Arauca",
+  "San Andrés", "Leticia", "Puerto Carreño", "Inírida", "Mitú",
+  "Soacha", "Bello", "Envigado", "Itagüí", "Palmira",
+  "Buenaventura", "Tuluá", "Cartago", "Rionegro", "Sabaneta",
+  "Chía", "Cajicá", "Zipaquirá", "Facatativá", "Soacha",
+  "Duitama", "Sogamoso", "Girardot", "Barrancabermeja",
+];
+
+export function isValidCity(city) {
+  if (!city || city.trim().length < 2) return false;
+  const normalized = city.trim().toLowerCase();
+  return COLOMBIAN_CITIES.some((c) => c.toLowerCase() === normalized);
+}

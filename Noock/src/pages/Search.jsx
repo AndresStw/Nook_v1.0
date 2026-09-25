@@ -1,25 +1,26 @@
-import { useState, useEffect } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
-import { Search as SearchIcon, MapPin, X, ArrowLeft } from 'lucide-react'
-import AppLayout from '../components/layout/AppLayout'
-import Badges from '../components/discover/Badges'
-import { useSearch } from '../hooks/useSearch'
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { Search as SearchIcon, MapPin, X, ArrowLeft } from "lucide-react";
+import AppLayout from "../components/layout/AppLayout";
+import Badges from "../components/discover/Badges";
+import { useSearch } from "../hooks/useSearch";
+import PiBadge from "../components/ui/PiBadge";
 
 export default function Search() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const navigate = useNavigate()
-  const [query, setQuery] = useState(searchParams.get('q') || '')
-  const { results, loading, error } = useSearch(query)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [query, setQuery] = useState(searchParams.get("q") || "");
+  const { results, loading, error } = useSearch(query);
 
   // Sincronizar URL con el query
   useEffect(() => {
-    const trimmed = query.trim()
+    const trimmed = query.trim();
     if (trimmed.length >= 2) {
-      setSearchParams({ q: trimmed }, { replace: true })
-    } else if (trimmed.length === 0 && searchParams.get('q')) {
-      setSearchParams({}, { replace: true })
+      setSearchParams({ q: trimmed }, { replace: true });
+    } else if (trimmed.length === 0 && searchParams.get("q")) {
+      setSearchParams({}, { replace: true });
     }
-  }, [query])
+  }, [query]);
 
   return (
     <AppLayout>
@@ -52,7 +53,7 @@ export default function Search() {
               />
               {query && (
                 <button
-                  onClick={() => setQuery('')}
+                  onClick={() => setQuery("")}
                   className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-bg-alt hover:bg-border flex items-center justify-center transition-colors"
                 >
                   <X size={11} className="text-text-secondary" />
@@ -64,7 +65,10 @@ export default function Search() {
           {/* Contenido */}
           {query.trim().length < 2 && (
             <div className="text-center py-16">
-              <SearchIcon size={32} className="text-text-tertiary mx-auto mb-3" />
+              <SearchIcon
+                size={32}
+                className="text-text-tertiary mx-auto mb-3"
+              />
               <p className="text-[13px] text-text-secondary mb-1">
                 Escribe al menos 2 letras
               </p>
@@ -97,7 +101,8 @@ export default function Search() {
           {!loading && results.length > 0 && (
             <div className="space-y-2">
               <p className="text-[11px] text-text-tertiary mb-2">
-                {results.length} {results.length === 1 ? 'resultado' : 'resultados'}
+                {results.length}{" "}
+                {results.length === 1 ? "resultado" : "resultados"}
               </p>
               {results.map((user) => (
                 <SearchResultCard key={user.id} user={user} />
@@ -107,11 +112,11 @@ export default function Search() {
         </div>
       </div>
     </AppLayout>
-  )
+  );
 }
 
 function SearchResultCard({ user }) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   return (
     <button
@@ -128,7 +133,7 @@ function SearchResultCard({ user }) {
           />
         ) : (
           <div className="w-14 h-14 rounded-full bg-bg-alt flex items-center justify-center text-text-tertiary text-[16px]">
-            {user.name?.[0] || '?'}
+            {user.name?.[0] || "?"}
           </div>
         )}
       </div>
@@ -138,8 +143,10 @@ function SearchResultCard({ user }) {
         <div className="flex items-center gap-1.5 mb-0.5">
           <div className="text-[13px] font-semibold text-text-primary truncate">
             {user.name}
-            {user.age ? `, ${user.age}` : ''}
+            {user.age ? `, ${user.age}` : ""}
           </div>
+          {/* ✅ PiBadge */}
+          <PiBadge pi={user.pi || 0} size="xs" />
         </div>
 
         {user.tagline && (
@@ -160,5 +167,5 @@ function SearchResultCard({ user }) {
         <Badges profile={user} />
       </div>
     </button>
-  )
+  );
 }

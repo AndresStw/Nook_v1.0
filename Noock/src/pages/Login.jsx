@@ -1,38 +1,38 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Mail, Lock, AlertCircle, ArrowLeft } from 'lucide-react'
-import { useAuth } from '../hooks/useAuth'
-import Logo from '../components/ui/Logo'
-import WallOfVoices from '../components/ui/WallOfVoices'
-import '../assets/Css/landing.css'
-import '../assets/Css/login.css'
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Mail, Lock, AlertCircle, ArrowLeft } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
+import Logo from "../components/ui/Logo";
+import WallOfVoices from "../components/ui/WallOfVoices";
+import "../assets/Css/landing.css";
+import "../assets/Css/login.css";
 
 export default function Login() {
-  const navigate = useNavigate()
-  const { signIn } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate();
+  const { signIn } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+    e.preventDefault();
+    setError("");
+    setLoading(true);
     try {
-      await signIn(email, password)
-      navigate('/feed')
+      await signIn(email, password);
+      navigate("/feed");
     } catch (err) {
-      console.error(err)
-      if (err.message.includes('Invalid login credentials')) {
-        setError('Correo o contraseña incorrectos')
+      console.error(err);
+      if (err.message.includes("Invalid login credentials")) {
+        setError("Correo o contraseña incorrectos");
       } else {
-        setError(err.message)
+        setError(err.message);
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <main className="nook-auth">
@@ -85,8 +85,12 @@ export default function Login() {
             </div>
           )}
 
-          <button type="submit" disabled={loading} className="nook-auth__button">
-            {loading ? 'Entrando...' : 'Entrar'}
+          <button
+            type="submit"
+            disabled={loading}
+            className="nook-auth__button"
+          >
+            {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
 
@@ -95,5 +99,5 @@ export default function Login() {
         </p>
       </div>
     </main>
-  )
+  );
 }

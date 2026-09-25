@@ -1,45 +1,45 @@
-import { useRef, useState } from 'react'
-import { Camera, Trash2, Loader2 } from 'lucide-react'
-import OnboardingLayout from './OnboardingLayout'
-import { useOnboardingStore } from '../../stores/onboardingStore'
-import { usePhotos } from '../../hooks/usePhotos'
-import { useAuth } from '../../hooks/useAuth'
+import { useRef, useState } from "react";
+import { Camera, Trash2, Loader2 } from "lucide-react";
+import OnboardingLayout from "./OnboardingLayout";
+import { useOnboardingStore } from "../../stores/onboardingStore";
+import { usePhotos } from "../../hooks/usePhotos";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function Step2Photos({ onNext, onBack }) {
-  const { user } = useAuth()
-  const { photos, addPhoto, removePhoto } = useOnboardingStore()
-  const { uploadPhoto, uploading, error } = usePhotos(user?.id)
-  const [localError, setLocalError] = useState(null)
+  const { user } = useAuth();
+  const { photos, addPhoto, removePhoto } = useOnboardingStore();
+  const { uploadPhoto, uploading, error } = usePhotos(user?.id);
+  const [localError, setLocalError] = useState(null);
 
   const refs = {
     1: useRef(null),
     2: useRef(null),
     3: useRef(null),
-  }
+  };
 
   const handleFileChange = async (e, position) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setLocalError(null)
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLocalError(null);
     try {
-      const url = await uploadPhoto(file, position)
-      addPhoto(url, position)
+      const url = await uploadPhoto(file, position);
+      addPhoto(url, position);
     } catch (err) {
-      setLocalError(err.message)
+      setLocalError(err.message);
     }
-    e.target.value = ''
-  }
+    e.target.value = "";
+  };
 
   const slots = [1, 2, 3].map((pos) => {
-    const found = photos.find((p) => p.position === pos)
-    return { position: pos, url: found?.url }
-  })
+    const found = photos.find((p) => p.position === pos);
+    return { position: pos, url: found?.url };
+  });
 
-  const canContinue = photos.length >= 1
+  const canContinue = photos.length >= 1;
 
   return (
     <OnboardingLayout
-      step={2}
+      step={3}
       title="Tus fotos"
       subtitle="Sube al menos 1. Máximo 3. La primera será tu foto principal."
       onBack={onBack}
@@ -81,7 +81,9 @@ export default function Step2Photos({ onNext, onBack }) {
                   <>
                     <Camera size={22} />
                     <span className="text-[10px] font-medium">
-                      {slot.position === 1 ? 'Principal' : `Foto ${slot.position}`}
+                      {slot.position === 1
+                        ? "Principal"
+                        : `Foto ${slot.position}`}
                     </span>
                   </>
                 )}
@@ -108,5 +110,5 @@ export default function Step2Photos({ onNext, onBack }) {
         Formatos permitidos: JPG, PNG, WEBP · Máximo 5MB
       </p>
     </OnboardingLayout>
-  )
+  );
 }

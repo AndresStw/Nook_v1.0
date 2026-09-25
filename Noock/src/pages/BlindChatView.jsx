@@ -5,6 +5,7 @@ import { useBlindChat } from "../hooks/useBlindChat";
 import Logo from "../components/ui/Logo";
 import BlindChatPanicButton from "../components/blind/BlindChatPanicButton";
 import { supabase } from "../lib/supabase";
+import PiBadge from "../components/ui/PiBadge";
 
 export default function BlindChatView() {
   const { chatId } = useParams();
@@ -232,8 +233,11 @@ export default function BlindChatView() {
             <div className="text-[13px] font-bold text-text-primary">
               Cita a ciegas
             </div>
-            <div className="text-[10px] text-text-tertiary">
-              {profile.other_alias || "Misterio"}
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-[10px] text-text-tertiary">
+                {profile.other_alias || "Misterio"}
+              </span>
+              <PiBadge pi={profile.pi || 0} size="xs" />
             </div>
           </div>
         </div>

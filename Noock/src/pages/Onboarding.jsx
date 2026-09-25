@@ -4,24 +4,26 @@ import { useAuth } from "../hooks/useAuth";
 import { useOnboardingStore } from "../stores/onboardingStore";
 
 import Step1Welcome from "../components/onboarding/Step1Welcome";
-import Step2Photos from "../components/onboarding/Step2Photos";
-import Step3Questions from "../components/onboarding/Step3Questions";
-import Step4Answers from "../components/onboarding/Step4Answers";
-import Step5Interests from "../components/onboarding/Step5Interests";
-import Step6Security from "../components/onboarding/Step6Security";
-import Step7SecurityRules from "../components/onboarding/Step7SecurityRules";
-import Step8Complete from "../components/onboarding/Step8Complete";
+import Step2Basic from "../components/onboarding/Step2Basic";
+import Step3Photos from "../components/onboarding/Step3Photos";
+import Step4Questions from "../components/onboarding/Step4Questions";
+import Step5Answers from "../components/onboarding/Step5Answers";
+import Step6Interests from "../components/onboarding/Step6Interests";
+import Step7Details from "../components/onboarding/Step7Details";
+import Step8Security from "../components/onboarding/Step8Security";
+import Step9SecurityRules from "../components/onboarding/Step9SecurityRules";
+import Step10Complete from "../components/onboarding/Step10Complete";
 
 export default function Onboarding() {
   const navigate = useNavigate();
   const { profile } = useAuth();
-  const { step, nextStep, prevStep, reset } = useOnboardingStore();
+  const { step, nextStep, prevStep } = useOnboardingStore();
 
   useEffect(() => {
     if (profile?.onboarding_completed) {
       navigate("/feed", { replace: true });
     }
-  }, [profile]);
+  }, [profile, navigate]);
 
   const props = { onNext: nextStep, onBack: step > 1 ? prevStep : null };
 
@@ -29,19 +31,23 @@ export default function Onboarding() {
     case 1:
       return <Step1Welcome {...props} />;
     case 2:
-      return <Step2Photos {...props} />;
+      return <Step2Basic {...props} />;
     case 3:
-      return <Step3Questions {...props} />;
+      return <Step3Photos {...props} />;
     case 4:
-      return <Step4Answers {...props} />;
+      return <Step4Questions {...props} />;
     case 5:
-      return <Step5Interests {...props} />;
+      return <Step5Answers {...props} />;
     case 6:
-      return <Step6Security {...props} />;
+      return <Step6Interests {...props} />;
     case 7:
-      return <Step7SecurityRules {...props} />;
+      return <Step7Details {...props} />;
     case 8:
-      return <Step8Complete onBack={prevStep} />;
+      return <Step8Security {...props} />;
+    case 9:
+      return <Step9SecurityRules {...props} />;
+    case 10:
+      return <Step10Complete onBack={prevStep} />;
     default:
       return <Step1Welcome {...props} />;
   }

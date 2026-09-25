@@ -1,10 +1,10 @@
-import { Shield, AlertCircle } from 'lucide-react'
-import OnboardingLayout from './OnboardingLayout'
+import { Shield, AlertCircle } from "lucide-react";
+import OnboardingLayout from "./OnboardingLayout";
 
 export default function Step6Security({ onNext, onBack }) {
   return (
     <OnboardingLayout
-      step={6}
+      step={8}
       title="Tu Botón de Pánico"
       subtitle="Es el botón más importante de Nook. Memorízalo."
       onBack={onBack}
@@ -62,12 +62,14 @@ export default function Step6Security({ onNext, onBack }) {
 
         <div className="p-3 rounded-xl bg-accent/8 border border-accent/20 text-center">
           <p className="text-[11px] text-text-secondary leading-relaxed">
-            <strong className="text-text-primary">Nook nunca te va a juzgar.</strong>
+            <strong className="text-text-primary">
+              Nook nunca te va a juzgar.
+            </strong>
             <br />
             Si algo se siente mal, úsalo.
           </p>
         </div>
       </div>
     </OnboardingLayout>
-  )
+  );
 }
