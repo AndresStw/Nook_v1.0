@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useOnboardingStore } from "../stores/onboardingStore";
-
 import Step1Welcome from "../components/onboarding/Step1Welcome";
 import Step2Basic from "../components/onboarding/Step2Basic";
 import Step3Photos from "../components/onboarding/Step3Photos";

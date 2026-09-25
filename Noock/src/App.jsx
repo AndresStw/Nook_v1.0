@@ -19,12 +19,14 @@ import ReportBugButton from "./components/ui/ReportBugButton";
 import PublicProfile from "./pages/PublicProfile";
 import AdminPanel from "./pages/AdminPanel";
 import AdminRoute from "./components/auth/AdminRoute";
+import SupportMessageBanner from "./components/support/SupportMessageBanner";
 
 export default function App() {
   return (
     <>
       <BlindChatInvite />
       <ReportBugButton />
+      <SupportMessageBanner />
       <Routes>
         {/* Públicas */}
         <Route path="/" element={<Landing />} />

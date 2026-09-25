@@ -1,38 +1,36 @@
-import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
+// src/hooks/useFeed.js
+import { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
 
-export function useFeed(limit = 10) {
-  const [profiles, setProfiles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+export function useFeed() {
+  const [profiles, setProfiles] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const fetchFeed = async () => {
-    setLoading(true);
-    setError(null);
+  const fetchProfiles = async () => {
+    setLoading(true)
+    setError(null)
 
-    const { data, error } = await supabase.rpc("get_feed_profiles", {
-      p_limit: limit,
-    });
+    const { data, error } = await supabase.rpc('get_filtered_profiles', {
+      p_limit: 20,
+    })
 
     if (error) {
-      console.error("🚨 NOOK-502: Error cargando feed", error);
-      setError(error.message);
-      setLoading(false);
-      return;
+      console.error('Error cargando feed:', error)
+      setError(error.message)
+    } else {
+      setProfiles(data || [])
     }
-
-    setProfiles(data || []);
-    setLoading(false);
-  };
+    setLoading(false)
+  }
 
   useEffect(() => {
-    fetchFeed();
-  }, [limit]);
+    fetchProfiles()
+  }, [])
 
-  return {
-    profiles,
-    loading,
-    error,
-    refetch: fetchFeed,
-  };
+  const removeProfile = (id) => {
+    setProfiles((prev) => prev.filter((p) => p.id !== id))
+  }
+
+  return { profiles, loading, error, refetch: fetchProfiles, removeProfile }
 }

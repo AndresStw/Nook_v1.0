@@ -132,3 +132,22 @@ export function formatHeight(cm) {
   const finalFeet = inches === 12 ? feet + 1 : feet;
   return `${meters}m · ${finalFeet}'${finalInches}`;
 }
+
+// Género interno (privado, para matching)
+export const GENDER_INTERNAL = {
+  hombre: "Hombre",
+  mujer: "Mujer",
+  no_binario: "No binario",
+  trans_hombre: "Hombre trans",
+  trans_mujer: "Mujer trans",
+  prefiero_no_decir: "Prefiero no decir",
+};
+
+// Opciones para "show_me" (excluye prefiero_no_decir)
+export const SHOW_ME_OPTIONS = [
+  "hombre",
+  "mujer",
+  "no_binario",
+  "trans_hombre",
+  "trans_mujer",
+];

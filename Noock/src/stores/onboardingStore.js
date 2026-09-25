@@ -4,7 +4,14 @@ const initialState = {
   // Paso actual (1-7)
   step: 1,
 
-  basic: { name: "", city: "", birth_date: "" }, //nuevo
+  basic: {
+    name: "",
+    city: "",
+    birth_date: "",
+    gender_internal: null, // ← nuevo
+    gender_public: false, // ← nuevo
+    show_me: [], // ← nuevo
+  },
 
   // Fotos subidas (URLs)
   photos: [], // [{ url, position }]
@@ -44,7 +51,7 @@ export const useOnboardingStore = create((set, get) => ({
   setStep: (step) => set({ step }),
   setSafetyRead: (value) => set({ safetyRead: value }),
   setBasic: (key, value) =>
-  set((s) => ({ basic: { ...s.basic, [key]: value } })),
+    set((s) => ({ basic: { ...s.basic, [key]: value } })),
   nextStep: () => set((s) => ({ step: Math.min(s.step + 1, 10) })),
   prevStep: () => set((s) => ({ step: Math.max(s.step - 1, 1) })),
 
