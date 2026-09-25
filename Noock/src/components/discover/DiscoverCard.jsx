@@ -123,18 +123,8 @@ export default function DiscoverCard({
         )}
 
         {/* Badge de PI + Botón expandir */}
-        <div className="absolute top-3 left-3 z-20 flex items-center gap-2">
+        <div className="absolute top-3 left-3 z-20">
           <PiBadge pi={profile.pi || 0} size="xs" variant="overlay" />
-          {photos.length > 0 && (
-            <button
-              onClick={handleExpand}
-              className="discover-expand-btn"
-              title="Ver fotos en tamaño completo"
-              aria-label="Expandir foto"
-            >
-              <Maximize2 size={14} />
-            </button>
-          )}
         </div>
 
         {/* Botón de pánico */}
@@ -181,7 +171,7 @@ export default function DiscoverCard({
               ))}
             </div>
           )}
-
+          {/* Botones de accion */}
           <div className="flex items-center justify-center gap-2.5">
             <button
               onClick={onPass}
@@ -217,6 +207,19 @@ export default function DiscoverCard({
                 className={isFavorited ? "fill-bg" : ""}
               />
             </button>
+
+            {/* NUEVO: botón de expandir al lado de la estrella */}
+            {photos.length > 0 && (
+              <button
+                onClick={handleExpand}
+                disabled={disabled}
+                className="w-10 h-10 rounded-full bg-white hover:bg-accent text-text-primary hover:text-bg flex items-center justify-center transition-all hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Ver fotos en tamaño completo"
+                title="Ver fotos en tamaño completo"
+              >
+                <Maximize2 size={16} strokeWidth={2.2} />
+              </button>
+            )}
           </div>
         </div>
       </div>

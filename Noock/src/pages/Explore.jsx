@@ -1,14 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   MapPin,
   CheckCircle2,
   SlidersHorizontal,
   X,
-  Search,
   Sparkles,
   Flame,
   Users,
   Clock,
+  Eye,
 } from "lucide-react";
 import AppLayout from "../components/layout/AppLayout";
 import { useExplore } from "../hooks/useExplore";
@@ -45,7 +46,6 @@ export default function Explore() {
       .order("name")
       .then(({ data }) => setInterests(data || []));
 
-    // Ciudades únicas de usuarios activos
     supabase
       .from("users")
       .select("city")
@@ -53,9 +53,20 @@ export default function Explore() {
       .eq("banned", false)
       .eq("shadowbanned", false)
       .then(({ data }) => {
-        const uniqueCities = [
-          ...new Set((data || []).map((u) => u.city)),
-        ].sort();
+        const normalized = (data || [])
+          .map((u) => u.city?.trim().replace(/\s+/g, " "))
+          .filter(Boolean);
+
+        const uniqueMap = new Map();
+        normalized.forEach((c) => {
+          const key = c.toLowerCase();
+          if (!uniqueMap.has(key)) uniqueMap.set(key, c);
+        });
+
+        const uniqueCities = [...uniqueMap.values()].sort((a, b) =>
+          a.localeCompare(b, "es"),
+        );
+
         setCities(uniqueCities);
       });
   }, []);
@@ -146,7 +157,6 @@ export default function Explore() {
         {/* Panel de filtros */}
         {filterOpen && (
           <div className="bg-bg-surface border border-border rounded-xl p-4 shrink-0">
-            {/* Ciudad */}
             <div className="mb-4">
               <label className="text-[10px] text-text-tertiary uppercase tracking-wider font-semibold mb-2 block">
                 Ciudad
@@ -162,9 +172,9 @@ export default function Explore() {
                 >
                   Todas
                 </button>
-                {cities.map((c) => (
+                {cities.map((c, idx) => (
                   <button
-                    key={c}
+                    key={`${c}-${idx}`}
                     onClick={() => setSelectedCity(c)}
                     className={`text-[11px] px-3 py-1.5 rounded-full border transition-all ${
                       selectedCity === c
@@ -178,7 +188,6 @@ export default function Explore() {
               </div>
             </div>
 
-            {/* Intereses */}
             <div className="mb-4">
               <label className="text-[10px] text-text-tertiary uppercase tracking-wider font-semibold mb-2 block">
                 Intereses ({selectedInterests.length} seleccionados)
@@ -203,7 +212,6 @@ export default function Explore() {
               </div>
             </div>
 
-            {/* Ordenar */}
             <div className="mb-4">
               <label className="text-[10px] text-text-tertiary uppercase tracking-wider font-semibold mb-2 block">
                 Ordenar por
@@ -324,7 +332,7 @@ function Section({ title, subtitle, users }) {
         <p className="text-[11px] text-text-tertiary">{subtitle}</p>
       </div>
 
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {users.map((u) => (
           <ProfileGridCard key={u.id} profile={u} />
         ))}
@@ -334,10 +342,14 @@ function Section({ title, subtitle, users }) {
 }
 
 function ProfileGridCard({ profile }) {
+  const navigate = useNavigate();
   const mainPhoto = profile.photos?.[0]?.url;
 
   return (
-    <button className="relative rounded-xl overflow-hidden aspect-[3/4] group text-left">
+    <button
+      onClick={() => navigate(`/u/${profile.id}`)}
+      className="relative rounded-xl overflow-hidden aspect-[3/4] group text-left hover:shadow-xl transition-all cursor-pointer"
+    >
       {mainPhoto ? (
         <img
           src={mainPhoto}
@@ -352,14 +364,20 @@ function ProfileGridCard({ profile }) {
 
       <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
 
-      {/* Verificado */}
+      {/* Overlay "Ver perfil" al hover */}
+      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+        <div className="bg-white/95 backdrop-blur-sm text-text-primary text-[11px] font-semibold px-4 py-2 rounded-full shadow-xl flex items-center gap-1.5">
+          <Eye size={12} />
+          Ver perfil
+        </div>
+      </div>
+
       {profile.verified && (
         <div className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-white/95 backdrop-blur flex items-center justify-center">
           <CheckCircle2 size={14} className="text-text-primary" />
         </div>
       )}
 
-      {/* Info */}
       <div className="absolute inset-x-0 bottom-0 p-3 text-white">
         <div className="text-[13px] font-semibold mb-0.5 truncate">
           {profile.name}

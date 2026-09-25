@@ -101,8 +101,8 @@
    TEMAS (solo cambian el acento)
    ============================ */
 [data-theme="default"] {
-  --color-accent: #173D38;
-  --color-accent-hover: #0B2622;
+  --color-accent: #0A0A0A;
+  --color-accent-hover: #000000;
 }
 
 [data-theme="menta"] {

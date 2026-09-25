@@ -12,8 +12,17 @@ export default function Messages() {
   const { blindChats, loading: loadingBlinds } = useBlindChats();
   const [selectedId, setSelectedId] = useState(null);
   const [search, setSearch] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
 
-  const filtered = conversations.filter((c) =>
+  // Separar en activos y archivados
+  const activeConversations = conversations.filter((c) => !c.is_archived);
+  const archivedConversations = conversations.filter((c) => c.is_archived);
+
+  const currentList = showArchived
+    ? archivedConversations
+    : activeConversations;
+
+  const filtered = currentList.filter((c) =>
     c.other_name?.toLowerCase().includes(search.toLowerCase()),
   );
 
@@ -25,6 +34,7 @@ export default function Messages() {
         photo: selectedConv.other_photo,
         pi: selectedConv.other_pi || 0,
         vip: selectedConv.other_vip_level,
+        isArchived: selectedConv.is_archived,
       }
     : null;
 
@@ -49,11 +59,35 @@ export default function Messages() {
                 className="w-full pl-9 pr-3 py-2 bg-bg-alt rounded-lg text-[12px] text-text-primary placeholder:text-text-tertiary focus:outline-none"
               />
             </div>
+
+            {/* Toggle Activos/Archivados */}
+            <div className="flex gap-1 mt-3 p-0.5 bg-bg-alt rounded-lg">
+              <button
+                onClick={() => setShowArchived(false)}
+                className={`flex-1 text-[11px] font-medium py-1.5 rounded-md transition-colors ${
+                  !showArchived
+                    ? "bg-bg-surface text-text-primary shadow-sm"
+                    : "text-text-secondary"
+                }`}
+              >
+                Activos ({activeConversations.length})
+              </button>
+              <button
+                onClick={() => setShowArchived(true)}
+                className={`flex-1 text-[11px] font-medium py-1.5 rounded-md transition-colors ${
+                  showArchived
+                    ? "bg-bg-surface text-text-primary shadow-sm"
+                    : "text-text-secondary"
+                }`}
+              >
+                Archivados ({archivedConversations.length})
+              </button>
+            </div>
           </div>
 
           <div className="flex-1 min-h-0 overflow-y-auto">
-            {/* Blind chats activos */}
-            {!loadingBlinds && blindChats.length > 0 && (
+            {/* Blind chats activos (solo en la tab de activos) */}
+            {!loadingBlinds && blindChats.length > 0 && !showArchived && (
               <div className="px-3 pt-3 pb-1">
                 <div className="text-[10px] text-text-tertiary uppercase tracking-wider mb-2 px-1">
                   Citas a ciegas
@@ -90,16 +124,17 @@ export default function Messages() {
               </div>
             )}
 
-            {/* Chats normales */}
             {loading && (
               <div className="text-center text-text-tertiary text-[11px] py-6">
                 Cargando...
               </div>
             )}
 
-            {!loading && filtered.length === 0 && blindChats.length === 0 && (
+            {!loading && filtered.length === 0 && (
               <div className="text-center text-text-tertiary text-[11px] py-6 px-4">
-                No tienes conversaciones todavía
+                {showArchived
+                  ? "No tienes conversaciones archivadas"
+                  : "No tienes conversaciones todavía"}
               </div>
             )}
 

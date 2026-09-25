@@ -1,17 +1,20 @@
 import { useState, useEffect } from "react";
 import OnboardingLayout from "./OnboardingLayout";
+import WallOfVoices from "../ui/WallOfVoices";
 import { useOnboardingStore } from "../../stores/onboardingStore";
 import { useAuth } from "../../hooks/useAuth";
 import { supabase } from "../../lib/supabase";
 import { User, MapPin, Calendar, AlertCircle } from "lucide-react";
 import { COLOMBIAN_CITIES, isValidCity } from "../../lib/cities";
+import "../../assets/Css/landing.css";
+import "../../assets/Css/login.css";
 
 export default function Step2Basic({ onNext, onBack }) {
   const { user } = useAuth();
   const { basic, setBasic } = useOnboardingStore();
   const [errors, setErrors] = useState({});
+  const [showAgeBlock, setShowAgeBlock] = useState(false);
 
-  // Pre-cargar nombre del registro
   useEffect(() => {
     if (!basic.name && user?.user_metadata?.name) {
       setBasic("name", user.user_metadata.name);
@@ -31,20 +34,36 @@ export default function Step2Basic({ onNext, onBack }) {
     if (!basic.city || !isValidCity(basic.city)) errs.city = "Elige una ciudad";
     if (!basic.birth_date) errs.birth_date = "Requerido";
 
-    // Validar mayoría de edad
     if (basic.birth_date) {
       const age = calculateAge(basic.birth_date);
-      if (age < 18) errs.birth_date = "Debes tener al menos 18 años";
-      if (age > 100) errs.birth_date = "Fecha inválida";
+      if (age < 18) {
+        errs.birth_date = `Debes tener al menos 18 años. Tienes ${age}.`;
+      } else if (age > 100) {
+        errs.birth_date = "Fecha inválida";
+      }
     }
 
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
+      if (errs.birth_date?.includes("18 años")) {
+        setShowAgeBlock(true);
+      }
       return;
     }
 
-    // Guardar directo en la DB
-    await supabase
+    const { data: ageCheck } = await supabase.rpc("check_age_eligibility", {
+      p_birth_date: basic.birth_date,
+    });
+
+    if (!ageCheck?.valid) {
+      setErrors({ birth_date: ageCheck?.error || "Edad no válida" });
+      if (ageCheck?.age && ageCheck.age < 18) {
+        setShowAgeBlock(true);
+      }
+      return;
+    }
+
+    const { error } = await supabase
       .from("users")
       .update({
         name: basic.name.trim(),
@@ -53,8 +72,52 @@ export default function Step2Basic({ onNext, onBack }) {
       })
       .eq("id", user.id);
 
+    if (error) {
+      setErrors({ birth_date: error.message });
+      return;
+    }
+
     onNext();
   };
+
+  // Bloqueo por menor de edad
+  if (showAgeBlock) {
+    return (
+      <main className="nook-auth nook-auth--onboarding">
+        <WallOfVoices />
+        <div className="nook-onboarding">
+          <div
+            className="nook-onboarding__card"
+            style={{ textAlign: "center" }}
+          >
+            <div className="text-6xl mb-4">🚫</div>
+            <h1 className="nook-onboarding__title mb-3">
+              Lo sentimos, pero...
+            </h1>
+            <p className="text-[13px] text-text-secondary leading-relaxed mb-5">
+              Debes tener al menos <strong>18 años</strong> para usar Nook. Es
+              un requisito legal para tu propia protección.
+            </p>
+            <div className="p-3 bg-error/5 border border-error/20 rounded-xl mb-5">
+              <p className="text-[11.5px] text-text-secondary leading-relaxed">
+                Si crees que es un error, escríbele al fundador con el botón 🐛
+                cuando cumplas la mayoría de edad.
+              </p>
+            </div>
+            <button
+              onClick={async () => {
+                await supabase.auth.signOut();
+                window.location.href = "/";
+              }}
+              className="w-full py-3 rounded-xl font-semibold text-[13px] bg-bg-alt text-text-primary border border-border hover:bg-border transition-colors"
+            >
+              Volver al inicio
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <OnboardingLayout
@@ -144,7 +207,11 @@ export default function Step2Basic({ onNext, onBack }) {
               type="date"
               value={basic.birth_date || ""}
               onChange={(e) => setBasic("birth_date", e.target.value)}
-              max={new Date().toISOString().split("T")[0]}
+              max={
+                new Date(new Date().setFullYear(new Date().getFullYear() - 18))
+                  .toISOString()
+                  .split("T")[0]
+              }
               className={`w-full pl-9 pr-3 py-2.5 rounded-xl text-[13px] bg-bg-alt border text-text-primary focus:outline-none focus:border-accent ${
                 errors.birth_date ? "border-error" : "border-border"
               }`}
@@ -155,6 +222,9 @@ export default function Step2Basic({ onNext, onBack }) {
               <AlertCircle size={11} /> {errors.birth_date}
             </p>
           )}
+          <p className="text-[10px] text-text-tertiary mt-1">
+            Debes tener al menos 18 años para usar Nook.
+          </p>
         </div>
       </div>
     </OnboardingLayout>

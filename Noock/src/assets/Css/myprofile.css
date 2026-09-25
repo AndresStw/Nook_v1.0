@@ -1652,3 +1652,13 @@
 .report-bug-close-btn:hover {
     background: var(--color-bg-alt);
 }
+
+/* Item de admin en el dropdown */
+.topbar__dropdown-item--admin {
+    color: var(--color-error);
+    font-weight: 600;
+}
+
+.topbar__dropdown-item--admin:hover {
+    background: rgba(248, 113, 113, 0.08);
+}

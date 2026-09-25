@@ -63,6 +63,14 @@ export default function ChatPanel({ matchId, otherUser }) {
     navigate("/messages");
   };
 
+  const handleUnarchive = async () => {
+    if (!matchId) return;
+    await supabase.rpc("unarchive_match", { p_match_id: matchId });
+    // Disparar refresco de la lista
+    window.dispatchEvent(new Event("refresh-conversations"));
+    navigate("/messages");
+  };
+
   const handleMute = async () => {
     if (!matchId) return;
     await supabase.rpc("mute_match", { p_match_id: matchId });
@@ -138,7 +146,9 @@ export default function ChatPanel({ matchId, otherUser }) {
         <ChatOptionsMenu
           matchId={matchId}
           otherUserId={otherUser.id}
+          isArchived={otherUser.isArchived || false}
           onArchive={handleArchive}
+          onUnarchive={handleUnarchive}
           onMute={handleMute}
           onBlock={handleBlock}
           onReport={handleReport}

@@ -5,12 +5,15 @@ import {
   Archive,
   ShieldOff,
   Flag,
+  ArchiveRestore,
 } from "lucide-react";
 
 export default function ChatOptionsMenu({
   matchId,
   otherUserId,
+  isArchived = false,
   onArchive,
+  onUnarchive,
   onMute,
   onBlock,
   onReport,
@@ -44,10 +47,9 @@ export default function ChatOptionsMenu({
 
       {open && (
         <>
-          {/* Overlay para cerrar */}
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
 
-          <div className="absolute right-0 top-8 z-50 w-52 bg-bg-surface border border-border rounded-xl shadow-elevated overflow-hidden animate-in">
+          <div className="absolute right-0 top-8 z-50 w-56 bg-bg-surface border border-border rounded-xl shadow-elevated overflow-hidden animate-in">
             <button
               onClick={() =>
                 handleAction("mute", onMute, "¿Silenciar esta conversación?")
@@ -59,20 +61,42 @@ export default function ChatOptionsMenu({
               <span className="text-[12.5px] text-text-primary">Silenciar</span>
             </button>
 
-            <button
-              onClick={() =>
-                handleAction(
-                  "archive",
-                  onArchive,
-                  "¿Archivar esta conversación? Desaparecerá de tu lista.",
-                )
-              }
-              disabled={processing}
-              className="w-full flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-bg-alt transition-colors text-left disabled:opacity-50"
-            >
-              <Archive size={14} className="text-text-secondary" />
-              <span className="text-[12.5px] text-text-primary">Archivar</span>
-            </button>
+            {/* Archivar / Desarchivar según el estado */}
+            {isArchived ? (
+              <button
+                onClick={() =>
+                  handleAction(
+                    "unarchive",
+                    onUnarchive,
+                    "¿Desarchivar esta conversación? Volverá a tu lista.",
+                  )
+                }
+                disabled={processing}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-bg-alt transition-colors text-left disabled:opacity-50"
+              >
+                <ArchiveRestore size={14} className="text-accent-hover" />
+                <span className="text-[12.5px] text-accent-hover font-medium">
+                  Desarchivar
+                </span>
+              </button>
+            ) : (
+              <button
+                onClick={() =>
+                  handleAction(
+                    "archive",
+                    onArchive,
+                    "¿Archivar esta conversación? Desaparecerá de tu lista.",
+                  )
+                }
+                disabled={processing}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-bg-alt transition-colors text-left disabled:opacity-50"
+              >
+                <Archive size={14} className="text-text-secondary" />
+                <span className="text-[12.5px] text-text-primary">
+                  Archivar
+                </span>
+              </button>
+            )}
 
             <div className="h-px bg-border-soft" />
 

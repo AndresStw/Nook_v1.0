@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 
 export function useConversations() {
@@ -6,8 +6,7 @@ export function useConversations() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchConversations = async () => {
-    setLoading(true);
+  const fetchConversations = useCallback(async () => {
     const { data, error } = await supabase.rpc("get_conversations");
 
     if (error) {
@@ -15,14 +14,15 @@ export function useConversations() {
       setError(error.message);
     } else {
       setConversations(data || []);
+      setError(null);
     }
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     fetchConversations();
 
-    // Suscribirse a nuevos mensajes para actualizar el preview
+    // Suscripción Realtime a cambios en la DB
     const channel = supabase
       .channel("conversations-updates")
       .on(
@@ -35,12 +35,22 @@ export function useConversations() {
         { event: "INSERT", schema: "public", table: "matches" },
         () => fetchConversations(),
       )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "matches" },
+        () => fetchConversations(),
+      )
       .subscribe();
+
+    // Listener del evento personalizado (para archivar/desarchivar)
+    const handleRefresh = () => fetchConversations();
+    window.addEventListener("refresh-conversations", handleRefresh);
 
     return () => {
       supabase.removeChannel(channel);
+      window.removeEventListener("refresh-conversations", handleRefresh);
     };
-  }, []);
+  }, [fetchConversations]);
 
   return {
     conversations,

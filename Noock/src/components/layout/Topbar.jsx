@@ -6,12 +6,15 @@ import {
   LogOut,
   Settings,
   User,
+  Shield,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../hooks/useAuth";
 import { supabase } from "../../lib/supabase";
+import Logo from "../ui/Logo";
+import AdminGateModal from "../admin/AdminGateModal";
 
 const THEMES = [
   { id: "menta", name: "Menta", color: "#14E5C0" },
@@ -24,21 +27,28 @@ const THEMES = [
   { id: "default", name: "Default", color: "#173D38" },
 ];
 
-export default function TopBar({ user }) {
+const ADMIN_EMAILS = ["nook.admin.bogota@gmail.com"];
+
+export default function TopBar() {
   const navigate = useNavigate();
   const { theme: currentTheme, setTheme } = useTheme();
-  const { signOut, profile } = useAuth();
+  const { signOut, profile, user: authUser } = useAuth();
   const [searchValue, setSearchValue] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [showThemes, setShowThemes] = useState(false);
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [avatarLoading, setAvatarLoading] = useState(true);
   const menuRef = useRef(null);
 
-  // Cargar foto principal del usuario
+  const isAdmin =
+    authUser?.email &&
+    ADMIN_EMAILS.includes(authUser.email) &&
+    profile?.role === "founder";
+
+  // Cargar avatar
   useEffect(() => {
     if (!profile?.id) return;
-
     setAvatarLoading(true);
     supabase
       .from("photos")
@@ -52,6 +62,7 @@ export default function TopBar({ user }) {
       });
   }, [profile?.id]);
 
+  // Cerrar dropdown al click afuera
   useEffect(() => {
     const handleClick = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -76,25 +87,13 @@ export default function TopBar({ user }) {
     navigate("/login");
   };
 
-  // Render del avatar con estados
   const renderAvatar = () => {
-    // 1. Foto cargada
     if (avatarUrl) {
-      return (
-        <img
-          src={avatarUrl}
-          alt={profile?.name || "Yo"}
-          className="topbar__avatar"
-        />
-      );
+      return <img src={avatarUrl} alt="Yo" className="topbar__avatar" />;
     }
-
-    // 2. Cargando
     if (avatarLoading) {
       return <div className="topbar__avatar topbar__avatar--skeleton" />;
     }
-
-    // 3. Sin foto: inicial del nombre
     if (profile?.name) {
       return (
         <div className="topbar__avatar topbar__avatar--placeholder">
@@ -102,133 +101,177 @@ export default function TopBar({ user }) {
         </div>
       );
     }
-
-    // 4. Fallback
     return <div className="topbar__avatar topbar__avatar--skeleton" />;
   };
 
   return (
-    <header className="topbar">
-      <form onSubmit={handleSubmit} className="topbar__search">
-        <Search size={15} className="topbar__search-icon" />
-        <input
-          type="text"
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          placeholder="Buscar personas, intereses, ciudades..."
-          className="topbar__search-input"
-        />
-      </form>
+    <>
+      <header className="topbar">
+        {/* Logo solo en mobile */}
+        <Link to="/feed" className="md:hidden shrink-0">
+          <Logo size={26} />
+        </Link>
 
-      <div className="topbar__actions">
-        <button className="topbar__icon-btn" title="Notificaciones">
-          <Bell size={17} strokeWidth={1.8} />
-        </button>
+        {/* Buscador solo en desktop */}
+        <form
+          onSubmit={handleSubmit}
+          className="topbar__search hidden md:block"
+        >
+          <Search size={15} className="topbar__search-icon" />
+          <input
+            type="text"
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            placeholder="Buscar personas, intereses, ciudades..."
+            className="topbar__search-input"
+          />
+        </form>
 
-        <div className="topbar__avatar-wrap" ref={menuRef}>
+        <div className="topbar__actions">
           <button
-            className="topbar__avatar-btn"
-            onClick={() => setMenuOpen(!menuOpen)}
+            onClick={() => navigate("/search")}
+            className="topbar__icon-btn md:hidden"
+            aria-label="Buscar"
           >
-            {renderAvatar()}
-            <ChevronDown
-              size={14}
-              className={`topbar__chevron ${menuOpen ? "topbar__chevron--open" : ""}`}
-            />
+            <Search size={17} strokeWidth={1.8} />
           </button>
 
-          {menuOpen && !showThemes && (
-            <div className="topbar__dropdown">
-              <div className="topbar__dropdown-header">
-                <div className="topbar__dropdown-name">
-                  {profile?.name || "Usuario"}
+          <button className="topbar__icon-btn" title="Notificaciones">
+            <Bell size={17} strokeWidth={1.8} />
+          </button>
+
+          <div className="topbar__avatar-wrap" ref={menuRef}>
+            <button
+              className="topbar__avatar-btn"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              {renderAvatar()}
+              <ChevronDown
+                size={14}
+                className={`topbar__chevron ${menuOpen ? "topbar__chevron--open" : ""}`}
+              />
+            </button>
+
+            {menuOpen && !showThemes && (
+              <div className="topbar__dropdown">
+                <div className="topbar__dropdown-header">
+                  <div className="topbar__dropdown-name">
+                    {profile?.name || "Usuario"}
+                  </div>
+                  <div className="topbar__dropdown-email">
+                    {authUser?.email}
+                  </div>
                 </div>
-                <div className="topbar__dropdown-email">{user?.email}</div>
-              </div>
 
-              <button
-                className="topbar__dropdown-item"
-                onClick={() => {
-                  navigate("/me");
-                  setMenuOpen(false);
-                }}
-              >
-                <User size={14} /> Mi perfil
-              </button>
-
-              <button
-                className="topbar__dropdown-item"
-                onClick={() => setShowThemes(true)}
-              >
-                <span
-                  className="topbar__dropdown-color"
-                  style={{
-                    background:
-                      THEMES.find((t) => t.id === currentTheme)?.color ||
-                      "#14E5C0",
+                <button
+                  className="topbar__dropdown-item"
+                  onClick={() => {
+                    navigate("/me");
+                    setMenuOpen(false);
                   }}
-                />
-                Color de la app
-                <ChevronDown size={12} className="ml-auto -rotate-90" />
-              </button>
+                >
+                  <User size={14} /> Mi perfil
+                </button>
 
-              <button
-                className="topbar__dropdown-item"
-                onClick={() => {
-                  navigate("/settings");
-                  setMenuOpen(false);
-                }}
-              >
-                <Settings size={14} /> Ajustes
-              </button>
+                <button
+                  className="topbar__dropdown-item"
+                  onClick={() => setShowThemes(true)}
+                >
+                  <span
+                    className="topbar__dropdown-color"
+                    style={{
+                      background:
+                        THEMES.find((t) => t.id === currentTheme)?.color ||
+                        "#14E5C0",
+                    }}
+                  />
+                  Color de la app
+                  <ChevronDown size={12} className="ml-auto -rotate-90" />
+                </button>
 
-              <div className="topbar__dropdown-divider" />
+                <button
+                  className="topbar__dropdown-item"
+                  onClick={() => {
+                    navigate("/settings");
+                    setMenuOpen(false);
+                  }}
+                >
+                  <Settings size={14} /> Ajustes
+                </button>
 
-              <button
-                className="topbar__dropdown-item topbar__dropdown-item--danger"
-                onClick={handleSignOut}
-              >
-                <LogOut size={14} /> Cerrar sesión
-              </button>
-            </div>
-          )}
-
-          {menuOpen && showThemes && (
-            <div className="topbar__dropdown">
-              <button
-                className="topbar__dropdown-back"
-                onClick={() => setShowThemes(false)}
-              >
-                <ChevronDown size={14} className="rotate-90" />
-                Atrás
-              </button>
-
-              <div className="topbar__dropdown-title">Color de la app</div>
-
-              <div className="topbar__themes">
-                {THEMES.map((t) => {
-                  const selected = currentTheme === t.id;
-                  return (
+                {/* Admin - solo para el founder */}
+                {isAdmin && (
+                  <>
+                    <div className="topbar__dropdown-divider" />
                     <button
-                      key={t.id}
-                      className={`topbar__theme ${selected ? "topbar__theme--active" : ""}`}
-                      onClick={() => setTheme(t.id)}
-                      title={t.name}
+                      className="topbar__dropdown-item topbar__dropdown-item--admin"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setAdminModalOpen(true);
+                      }}
                     >
-                      <span
-                        className="topbar__theme-dot"
-                        style={{ background: t.color }}
-                      />
-                      <span className="topbar__theme-name">{t.name}</span>
-                      {selected && <Check size={11} className="ml-auto" />}
+                      <Shield size={14} />
+                      Administrador
+                      <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-error/15 text-error">
+                        ROOT
+                      </span>
                     </button>
-                  );
-                })}
+                  </>
+                )}
+
+                <div className="topbar__dropdown-divider" />
+
+                <button
+                  className="topbar__dropdown-item topbar__dropdown-item--danger"
+                  onClick={handleSignOut}
+                >
+                  <LogOut size={14} /> Cerrar sesión
+                </button>
               </div>
-            </div>
-          )}
+            )}
+
+            {menuOpen && showThemes && (
+              <div className="topbar__dropdown">
+                <button
+                  className="topbar__dropdown-back"
+                  onClick={() => setShowThemes(false)}
+                >
+                  <ChevronDown size={14} className="rotate-90" />
+                  Atrás
+                </button>
+
+                <div className="topbar__dropdown-title">Color de la app</div>
+
+                <div className="topbar__themes">
+                  {THEMES.map((t) => {
+                    const selected = currentTheme === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        className={`topbar__theme ${selected ? "topbar__theme--active" : ""}`}
+                        onClick={() => setTheme(t.id)}
+                        title={t.name}
+                      >
+                        <span
+                          className="topbar__theme-dot"
+                          style={{ background: t.color }}
+                        />
+                        <span className="topbar__theme-name">{t.name}</span>
+                        {selected && <Check size={11} className="ml-auto" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      <AdminGateModal
+        open={adminModalOpen}
+        onClose={() => setAdminModalOpen(false)}
+      />
+    </>
   );
 }

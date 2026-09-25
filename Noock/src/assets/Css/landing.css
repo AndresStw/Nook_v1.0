@@ -84,8 +84,8 @@
   border-radius: 17px;
 
   background: rgba(255, 255, 255, 0.47);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  
+  
 
   box-shadow:
     0 12px 35px rgba(23, 61, 56, 0.035);

@@ -17,6 +17,8 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import BlindChatInvite from "./components/blind/BlindChatInvite";
 import ReportBugButton from "./components/ui/ReportBugButton";
 import PublicProfile from "./pages/PublicProfile";
+import AdminPanel from "./pages/AdminPanel";
+import AdminRoute from "./components/auth/AdminRoute";
 
 export default function App() {
   return (
@@ -41,6 +43,14 @@ export default function App() {
         />
 
         {/* Protegidas */}
+        <Route
+          path="/admin-nook-kevin-2026"
+          element={
+            <AdminRoute>
+              <AdminPanel />
+            </AdminRoute>
+          }
+        />
         <Route
           path="/feed"
           element={

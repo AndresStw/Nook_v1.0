@@ -66,15 +66,21 @@ export function ThemeProvider({ children }) {
     // 1. Cambio inmediato en UI
     setThemeState(newTheme);
 
-    // 2. Persistir en DB si hay usuario logueado
+    // 2. Persistir en DB
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (user) {
-      await supabase
-        .from("users")
-        .update({ theme: newTheme })
-        .eq("id", user.id);
+    if (!user) return;
+
+    const { error } = await supabase
+      .from("users")
+      .update({ theme: newTheme })
+      .eq("id", user.id);
+
+    if (error) {
+      console.error("🚨 NOOK-502: Error guardando tema", error);
+    } else {
+      console.log("✅ Tema guardado:", newTheme);
     }
   };
 
