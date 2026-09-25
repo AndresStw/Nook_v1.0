@@ -7,6 +7,9 @@ const READING_TIME = 8;
 const DECIDING_TIME = 20;
 const REVEALING_TIME = 2;
 
+// Rutas donde NO debe aparecer el chispazo
+const PUBLIC_ROUTES = ["/", "/login", "/register", "/test", "/onboarding"];
+
 export default function BlindChatInvite() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,6 +29,12 @@ export default function BlindChatInvite() {
   const hasExpiredRef = useRef(false);
   const chatIdRef = useRef(null);
 
+  // ============================================
+  // GUARDS DE RUTA
+  // ============================================
+  const isPublicRoute = PUBLIC_ROUTES.includes(location.pathname);
+  const isBlindChatRoute = location.pathname.startsWith("/blind/");
+
   // Mantener el chatId en un ref para que el timer de revealing no se reinicie
   useEffect(() => {
     chatIdRef.current = invite?.id || null;
@@ -38,7 +47,17 @@ export default function BlindChatInvite() {
     });
   }, []);
 
-  // Cargar invitación pendiente al montar
+  // Escuchar cambios de sesión (login/logout)
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCurrentUserId(session?.user?.id || null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Cargar invitación pendiente al montar (solo si está autenticado)
   useEffect(() => {
     if (!currentUserId) return;
     const checkPending = async () => {
@@ -149,7 +168,7 @@ export default function BlindChatInvite() {
     }, REVEALING_TIME * 1000);
 
     return () => clearTimeout(timeoutId);
-  }, [phase]); // ← AHORA SOLO DEPENDE DE phase
+  }, [phase]);
 
   // Timer de fases
   useEffect(() => {
@@ -169,13 +188,10 @@ export default function BlindChatInvite() {
           setPhase("deciding");
           setTimeLeft(DECIDING_TIME);
         } else if (phase === "deciding") {
-          // Tiempo agotado
           if (!myVoted && !hasExpiredRef.current) {
             hasExpiredRef.current = true;
             handleExpire();
           } else if (myVoted && !theirVoted) {
-            // Yo voté pero el otro no. Esperamos un poco más...
-            // Pero para que no se quede infinito, expiramos.
             if (!hasExpiredRef.current) {
               hasExpiredRef.current = true;
               handleExpire();
@@ -243,8 +259,12 @@ export default function BlindChatInvite() {
     setResult(null);
   };
 
-  // Guards
-  if (location.pathname.startsWith("/blind/")) return null;
+  // ============================================
+  // GUARDS FINALES
+  // ============================================
+  if (!currentUserId) return null; // No autenticado
+  if (isPublicRoute) return null; // Landing, login, register, onboarding
+  if (isBlindChatRoute) return null; // Ya está en un blind chat
   if (!invite || phase === "idle") return null;
 
   // Resultado
