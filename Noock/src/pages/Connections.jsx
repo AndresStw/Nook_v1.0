@@ -1,104 +1,39 @@
 import { useState } from "react";
-import { MessageCircle, Heart, Clock, CheckCheck } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {
+  MessageCircle,
+  Heart,
+  Clock,
+  CheckCheck,
+  Archive,
+  Sparkles,
+} from "lucide-react";
 import AppLayout from "../components/layout/AppLayout";
-
-const tabs = [
-  { id: "new", label: "Nuevas", icon: Heart, count: 3 },
-  { id: "active", label: "Activas", icon: MessageCircle, count: 8 },
-  { id: "archived", label: "Archivadas", icon: Clock, count: 0 },
-];
-
-const mockConnections = [
-  {
-    id: 1,
-    name: "Valentina",
-    age: 23,
-    photo:
-      "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&q=80",
-    lastMessage: "¿Te gustaría ir algún día?",
-    time: "10:30 p.m.",
-    unread: 2,
-    online: true,
-    status: "new",
-  },
-  {
-    id: 2,
-    name: "Camila",
-    age: 24,
-    photo:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80",
-    lastMessage: "Jajaja me encanta esa idea",
-    time: "9:12 p.m.",
-    unread: 0,
-    online: true,
-    status: "active",
-  },
-  {
-    id: 3,
-    name: "Isabella",
-    age: 25,
-    photo:
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80",
-    lastMessage: "¿Qué tal estuvo tu día?",
-    time: "8:45 p.m.",
-    unread: 1,
-    online: false,
-    status: "active",
-  },
-  {
-    id: 4,
-    name: "Laura",
-    age: 24,
-    photo:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80",
-    lastMessage: "Buena noche ✨",
-    time: "Ayer",
-    unread: 0,
-    online: false,
-    status: "active",
-  },
-  {
-    id: 5,
-    name: "Andrés",
-    age: 27,
-    photo:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80",
-    lastMessage: "Entonces quedamos para el sábado",
-    time: "Ayer",
-    unread: 0,
-    online: true,
-    status: "active",
-  },
-  {
-    id: 6,
-    name: "Sofía",
-    age: 26,
-    photo:
-      "https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=400&q=80",
-    lastMessage: "Me encantó la canción que me mandaste",
-    time: "Lunes",
-    unread: 0,
-    online: false,
-    status: "active",
-  },
-  {
-    id: 7,
-    name: "Mateo",
-    age: 29,
-    photo:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80",
-    lastMessage: "Sí, vamos a ver qué pasa",
-    time: "Lunes",
-    unread: 0,
-    online: false,
-    status: "archived",
-  },
-];
+import PiBadge from "../components/ui/PiBadge";
+import { useConnections } from "../hooks/useConnections";
 
 export default function Connections() {
+  const navigate = useNavigate();
+  const { groups, loading } = useConnections();
   const [activeTab, setActiveTab] = useState("active");
 
-  const filtered = mockConnections.filter((c) => c.status === activeTab);
+  const tabs = [
+    { id: "new", label: "Nuevos", icon: Sparkles, count: groups.new.length },
+    {
+      id: "active",
+      label: "Activos",
+      icon: MessageCircle,
+      count: groups.active.length,
+    },
+    {
+      id: "archived",
+      label: "Archivados",
+      icon: Clock,
+      count: groups.archived.length,
+    },
+  ];
+
+  const currentList = groups[activeTab] || [];
 
   return (
     <AppLayout>
@@ -109,7 +44,7 @@ export default function Connections() {
             Conexiones
           </h1>
           <p className="text-[12px] text-text-secondary">
-            Personas con las que has conectado
+            {groups.new.length + groups.active.length} conexiones activas
           </p>
         </div>
 
@@ -144,12 +79,24 @@ export default function Connections() {
 
         {/* Lista */}
         <div className="flex-1 min-h-0 overflow-y-auto">
-          {filtered.length === 0 ? (
+          {loading && (
+            <div className="text-center py-12 text-text-tertiary text-[12px]">
+              Cargando conexiones...
+            </div>
+          )}
+
+          {!loading && currentList.length === 0 && (
             <EmptyState tab={activeTab} />
-          ) : (
+          )}
+
+          {!loading && currentList.length > 0 && (
             <div className="grid grid-cols-3 gap-3 pb-4">
-              {filtered.map((conn) => (
-                <ConnectionCard key={conn.id} conn={conn} />
+              {currentList.map((conn) => (
+                <ConnectionCard
+                  key={conn.match_id}
+                  conn={conn}
+                  onOpen={() => navigate(`/messages?match=${conn.match_id}`)}
+                />
               ))}
             </div>
           )}
@@ -159,83 +106,120 @@ export default function Connections() {
   );
 }
 
-function ConnectionCard({ conn }) {
+function ConnectionCard({ conn, onOpen }) {
+  const lastActive = conn.other_last_active
+    ? new Date(conn.other_last_active)
+    : null;
+  const isOnline =
+    lastActive && Date.now() - lastActive.getTime() < 5 * 60 * 1000;
+
+  const timeAgo = conn.last_message_at
+    ? formatTimeAgo(new Date(conn.last_message_at))
+    : formatTimeAgo(new Date(conn.match_created_at));
+
   return (
-    <div className="bg-bg-surface border border-border rounded-2xl p-3 shadow-soft hover:shadow-card transition-shadow">
+    <button
+      onClick={onOpen}
+      className="bg-bg-surface border border-border rounded-2xl p-3 shadow-soft hover:shadow-card hover:border-accent/40 transition-all text-left"
+    >
       <div className="flex items-start gap-3">
-        {/* Avatar */}
         <div className="relative shrink-0">
-          <img
-            src={conn.photo}
-            alt={conn.name}
-            className="w-14 h-14 rounded-full object-cover"
-          />
-          {conn.online && (
+          {conn.other_photo ? (
+            <img
+              src={conn.other_photo}
+              alt={conn.other_name}
+              className="w-14 h-14 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-14 h-14 rounded-full bg-bg-alt flex items-center justify-center text-text-tertiary text-[18px]">
+              {conn.other_name?.[0] || "?"}
+            </div>
+          )}
+          {isOnline && (
             <span className="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-bg-surface" />
           )}
         </div>
 
-        {/* Info */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-0.5">
-            <div className="text-[13px] font-semibold text-text-primary truncate">
-              {conn.name}, {conn.age}
+          <div className="flex items-center justify-between mb-0.5 gap-2">
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              <div className="text-[13px] font-semibold text-text-primary truncate">
+                {conn.other_name}
+              </div>
+              <PiBadge pi={conn.other_pi || 0} size="xs" />
+              {conn.other_vip && (
+                <span className="text-[8.5px] font-bold px-1.5 py-0.5 rounded-full text-amber-700 bg-amber-100 shrink-0">
+                  VIP
+                </span>
+              )}
             </div>
-            <div className="text-[10px] text-text-tertiary shrink-0 ml-2">
-              {conn.time}
+            <div className="text-[10px] text-text-tertiary shrink-0">
+              {timeAgo}
             </div>
           </div>
 
           <p
             className={`text-[12px] truncate ${
-              conn.unread > 0
+              conn.unread_count > 0
                 ? "text-text-primary font-medium"
                 : "text-text-secondary"
             }`}
           >
-            {conn.lastMessage}
+            {conn.last_message || "Di hola 👋"}
           </p>
 
-          {/* Footer */}
           <div className="flex items-center justify-between mt-2">
             <div className="flex items-center gap-1 text-[10px] text-text-tertiary">
-              <CheckCheck size={11} className="text-accent" />
-              <span>Conversando</span>
+              {conn.total_messages > 0 ? (
+                <>
+                  <CheckCheck size={11} className="text-accent" />
+                  <span>{conn.total_messages} mensajes</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles size={11} className="text-accent" />
+                  <span>Match nuevo</span>
+                </>
+              )}
             </div>
 
-            {conn.unread > 0 && (
+            {conn.unread_count > 0 && (
               <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-text-primary text-bg text-[10px] font-semibold flex items-center justify-center">
-                {conn.unread}
+                {conn.unread_count}
               </span>
             )}
           </div>
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 
 function EmptyState({ tab }) {
   const messages = {
     new: {
+      icon: Sparkles,
       title: "Sin conexiones nuevas",
-      text: "Cuando alguien te corresponda, aparecerá aquí.",
+      text: "Cuando tengas un match nuevo, aparecerá aquí.",
     },
     active: {
+      icon: MessageCircle,
       title: "Sin conversaciones activas",
-      text: "Empieza a hablar con alguien para verlo aquí.",
+      text: "Empieza a hablar con alguien para verlas aquí.",
     },
     archived: {
+      icon: Archive,
       title: "Sin conversaciones archivadas",
       text: "Las conversaciones que archives aparecerán aquí.",
     },
   };
   const msg = messages[tab];
+  const Icon = msg.icon;
 
   return (
     <div className="flex flex-col items-center justify-center h-full text-center py-16">
       <div className="w-12 h-12 rounded-full bg-bg-alt flex items-center justify-center mb-3">
-        <Heart size={20} className="text-text-tertiary" />
+        <Icon size={20} className="text-text-tertiary" />
       </div>
       <h3 className="text-[14px] font-semibold text-text-primary mb-1">
         {msg.title}
@@ -243,4 +227,16 @@ function EmptyState({ tab }) {
       <p className="text-[12px] text-text-secondary max-w-xs">{msg.text}</p>
     </div>
   );
+}
+
+function formatTimeAgo(date) {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 60) return "Ahora";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d`;
+  return date.toLocaleDateString("es-CO", { day: "numeric", month: "short" });
 }

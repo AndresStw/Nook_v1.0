@@ -15,11 +15,14 @@ import BlindChatView from "./pages/BlindChatView";
 import Settings from "./pages/Settings";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import BlindChatInvite from "./components/blind/BlindChatInvite";
+import ReportBugButton from "./components/ui/ReportBugButton";
+import PublicProfile from "./pages/PublicProfile";
 
 export default function App() {
   return (
     <>
       <BlindChatInvite />
+      <ReportBugButton />
       <Routes>
         {/* Públicas */}
         <Route path="/" element={<Landing />} />
@@ -106,9 +109,7 @@ export default function App() {
           path="/u/:userId"
           element={
             <ProtectedRoute>
-              <div className="p-8 text-center text-text-secondary">
-                Perfil público en construcción
-              </div>
+              <PublicProfile />
             </ProtectedRoute>
           }
         />

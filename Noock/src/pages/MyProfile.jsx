@@ -21,6 +21,7 @@ import {
   Heart,
   HelpCircle,
   Palette,
+  ChevronRight,
 } from "lucide-react";
 
 import AppLayout from "../components/layout/AppLayout";
@@ -108,6 +109,10 @@ export default function MyProfile() {
     answers: 0,
   });
 
+  // Acordeón de preguntas
+  const [expandedQuestions, setExpandedQuestions] = useState(new Set());
+  const [initializedExpansion, setInitializedExpansion] = useState(false);
+
   const fileInputRefs = {
     1: useRef(null),
     2: useRef(null),
@@ -180,6 +185,20 @@ export default function MyProfile() {
       if (Array.isArray(data)) setMyAnswers(data);
     });
   }, [user]);
+
+  // Inicializar expansión: abrir preguntas respondidas por defecto
+  useEffect(() => {
+    if (initializedExpansion || questionsList.length === 0) return;
+
+    const answeredIds = new Set(
+      myAnswers
+        .filter((a) => a.answer?.trim().length >= 3)
+        .map((a) => a.question_id),
+    );
+
+    setExpandedQuestions(answeredIds);
+    setInitializedExpansion(true);
+  }, [questionsList, myAnswers, initializedExpansion]);
 
   const refreshCounts = async () => {
     const { data } = await supabase.rpc("get_my_counts");
@@ -323,19 +342,32 @@ export default function MyProfile() {
 
   const handleSaveAnswers = async () => {
     const valid = myAnswers.filter((a) => a.answer?.trim().length >= 3);
-    if (valid.length !== 3) {
-      showToast("Responde exactamente 3 preguntas", "error");
+
+    if (valid.length === 0) {
+      showToast("Responde al menos una pregunta", "error");
       return;
     }
+
+    const displayedCount = valid.filter((a) => a.is_displayed).length;
+    if (displayedCount > 3) {
+      showToast("Solo puedes mostrar 3 respuestas", "error");
+      return;
+    }
+
     setSaving(true);
     const { error } = await supabase.rpc("save_my_answers", {
       p_answers: valid,
     });
     setSaving(false);
-    if (error) showToast(error.message, "error");
-    else {
+
+    if (error) {
+      showToast(error.message, "error");
+    } else {
       showToast("Respuestas guardadas", "ok");
       refreshCounts();
+
+      const { data } = await supabase.rpc("get_my_answers");
+      if (Array.isArray(data)) setMyAnswers(data);
     }
   };
 
@@ -391,6 +423,24 @@ export default function MyProfile() {
 
     return { items, percent };
   }, [photos, form, realCounts]);
+
+  // Ordenar preguntas: visibles primero, luego respondidas, luego vacías
+  const sortedQuestions = useMemo(() => {
+    return [...questionsList].sort((a, b) => {
+      const aAns = myAnswers.find((ans) => ans.question_id === a.id);
+      const bAns = myAnswers.find((ans) => ans.question_id === b.id);
+
+      const aDisplayed = aAns?.is_displayed ? 1 : 0;
+      const bDisplayed = bAns?.is_displayed ? 1 : 0;
+      if (aDisplayed !== bDisplayed) return bDisplayed - aDisplayed;
+
+      const aAnswered = aAns?.answer?.trim().length >= 3 ? 1 : 0;
+      const bAnswered = bAns?.answer?.trim().length >= 3 ? 1 : 0;
+      if (aAnswered !== bAnswered) return bAnswered - aAnswered;
+
+      return 0;
+    });
+  }, [questionsList, myAnswers]);
 
   const currentQuote = QUOTES[quoteIndex];
 
@@ -751,9 +801,7 @@ export default function MyProfile() {
                   })}
                 </div>
 
-                {/* ============================================ */}
-                {/* VIDEO DE PRESENTACIÓN (solo PI >= 5000)     */}
-                {/* ============================================ */}
+                {/* VIDEO DE PRESENTACIÓN */}
                 <div className="mt-6 pt-6 border-t border-border-soft">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
@@ -913,67 +961,212 @@ export default function MyProfile() {
               <div className="profile-card">
                 <div className="profile-card__header">
                   <div className="profile-card__header-title">
-                    <HelpCircle size={16} /> Tus preguntas
+                    <HelpCircle size={16} /> Tus respuestas
                   </div>
                   <span className="profile-card__counter">
-                    <HelpCircle size={10} /> {myAnswers.length}/3
+                    <Check size={10} />
+                    {myAnswers.filter((a) => a.is_displayed).length} / 3
+                    visibles
                   </span>
                 </div>
 
                 <p className="text-[12px] text-text-secondary mb-4">
-                  Elige 3 preguntas y respóndelas. Es lo primero que ven los
-                  demás.
+                  Responde las preguntas que quieras. Solo{" "}
+                  <strong>3 se mostrarán</strong> en tu perfil — las que marques
+                  con ✓.
                 </p>
 
-                <div className="space-y-4">
-                  {questionsList.map((q) => {
+                {/* Botón expandir/colapsar todo */}
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[11px] text-text-tertiary">
+                    {expandedQuestions.size} de {sortedQuestions.length}{" "}
+                    abiertas
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (expandedQuestions.size === sortedQuestions.length) {
+                        setExpandedQuestions(new Set());
+                      } else {
+                        setExpandedQuestions(
+                          new Set(sortedQuestions.map((q) => q.id)),
+                        );
+                      }
+                    }}
+                    className="text-[11px] text-accent-hover font-medium hover:underline"
+                  >
+                    {expandedQuestions.size === sortedQuestions.length
+                      ? "Colapsar todas"
+                      : "Expandir todas"}
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {sortedQuestions.map((q) => {
                     const answerObj = myAnswers.find(
                       (a) => a.question_id === q.id,
                     );
                     const answer = answerObj?.answer || "";
+                    const isDisplayed = answerObj?.is_displayed || false;
+                    const isAnswered = answer.trim().length >= 3;
+                    const displayCount = myAnswers.filter(
+                      (a) => a.is_displayed,
+                    ).length;
+                    const canCheck =
+                      isAnswered && (isDisplayed || displayCount < 3);
+                    const isExpanded = expandedQuestions.has(q.id);
+
+                    const toggleExpand = () => {
+                      setExpandedQuestions((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(q.id)) next.delete(q.id);
+                        else next.add(q.id);
+                        return next;
+                      });
+                    };
+
                     return (
-                      <div key={q.id} className="profile-field">
-                        <label className="profile-field__label">
-                          {q.text}
-                          {answerObj && answer.trim().length >= 3 && (
-                            <span className="profile-field__hint text-accent">
-                              ✓ guardada
-                            </span>
-                          )}
-                        </label>
-                        <textarea
-                          value={answer}
-                          onChange={(e) => {
-                            const text = e.target.value;
-                            setMyAnswers((prev) => {
-                              const exists = prev.find(
-                                (a) => a.question_id === q.id,
-                              );
-                              if (exists) {
-                                return prev.map((a) =>
-                                  a.question_id === q.id
-                                    ? { ...a, answer: text }
-                                    : a,
-                                );
-                              }
-                              if (text.trim() && prev.length < 3) {
-                                return [
-                                  ...prev,
-                                  { question_id: q.id, answer: text },
-                                ];
-                              }
-                              return prev;
-                            });
-                          }}
-                          maxLength={150}
-                          rows={2}
-                          placeholder="Tu respuesta..."
-                          className="profile-field__textarea"
-                          style={{ minHeight: "60px" }}
-                        />
-                        <div className="profile-field__feedback profile-field__feedback--info">
-                          {answer.length} / 150
-                        </div>
+                      <div
+                        key={q.id}
+                        className={`border rounded-xl transition-colors ${
+                          isExpanded
+                            ? "border-border bg-bg-surface"
+                            : "border-border-soft bg-bg-surface/60 hover:bg-bg-surface"
+                        }`}
+                      >
+                        {/* Header clickeable */}
+                        <button
+                          type="button"
+                          onClick={toggleExpand}
+                          className="w-full flex items-start gap-3 p-3 text-left"
+                        >
+                          <div
+                            className={`mt-0.5 shrink-0 transition-transform duration-200 ${
+                              isExpanded ? "rotate-90" : ""
+                            }`}
+                          >
+                            <ChevronRight
+                              size={14}
+                              className="text-text-tertiary"
+                            />
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[12.5px] font-medium text-text-primary leading-snug mb-1">
+                              {q.text}
+                            </div>
+
+                            {!isExpanded && isAnswered && (
+                              <div className="text-[11.5px] text-text-secondary truncate italic">
+                                "{answer}"
+                              </div>
+                            )}
+
+                            <div className="flex items-center gap-2 mt-1.5">
+                              {isDisplayed && (
+                                <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-accent text-bg">
+                                  ✓ Visible
+                                </span>
+                              )}
+                              {isAnswered && !isDisplayed && (
+                                <span className="text-[9.5px] font-medium px-2 py-0.5 rounded-full bg-bg-alt text-text-tertiary">
+                                  Respondida
+                                </span>
+                              )}
+                              {!isAnswered && (
+                                <span className="text-[9.5px] font-medium px-2 py-0.5 rounded-full bg-bg-alt text-text-tertiary">
+                                  Sin responder
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+
+                        {/* Body expandible */}
+                        {isExpanded && (
+                          <div className="px-3 pb-3 pl-10">
+                            {isAnswered && (
+                              <div className="flex justify-end mb-2">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setMyAnswers((prev) =>
+                                      prev.map((a) =>
+                                        a.question_id === q.id
+                                          ? {
+                                              ...a,
+                                              is_displayed: !a.is_displayed,
+                                            }
+                                          : a,
+                                      ),
+                                    );
+                                  }}
+                                  disabled={!canCheck}
+                                  className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${
+                                    isDisplayed
+                                      ? "bg-accent text-bg border-accent"
+                                      : canCheck
+                                        ? "bg-transparent border-border text-text-tertiary hover:border-accent hover:text-accent-hover"
+                                        : "bg-transparent border-border/40 text-text-tertiary/40 cursor-not-allowed"
+                                  }`}
+                                  title={
+                                    isDisplayed
+                                      ? "Visible en tu perfil"
+                                      : canCheck
+                                        ? "Marcar como visible"
+                                        : "Ya tienes 3 visibles"
+                                  }
+                                >
+                                  {isDisplayed ? (
+                                    <span className="flex items-center gap-1">
+                                      <Check size={10} strokeWidth={3} />
+                                      Visible
+                                    </span>
+                                  ) : (
+                                    "Mostrar en perfil"
+                                  )}
+                                </button>
+                              </div>
+                            )}
+
+                            <textarea
+                              value={answer}
+                              onChange={(e) => {
+                                const text = e.target.value;
+                                setMyAnswers((prev) => {
+                                  const exists = prev.find(
+                                    (a) => a.question_id === q.id,
+                                  );
+                                  if (exists) {
+                                    return prev.map((a) =>
+                                      a.question_id === q.id
+                                        ? { ...a, answer: text }
+                                        : a,
+                                    );
+                                  }
+                                  return [
+                                    ...prev,
+                                    {
+                                      question_id: q.id,
+                                      answer: text,
+                                      is_displayed: false,
+                                    },
+                                  ];
+                                });
+                              }}
+                              maxLength={150}
+                              rows={2}
+                              placeholder="Tu respuesta..."
+                              className="profile-field__textarea"
+                              style={{ minHeight: "60px" }}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <div className="profile-field__feedback profile-field__feedback--info">
+                              {answer.length} / 150
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
