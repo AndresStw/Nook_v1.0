@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 
+//Componente
 export function useBlindChat(chatId) {
   const [chat, setChat] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -13,6 +14,9 @@ export function useBlindChat(chatId) {
   const [currentUserId, setCurrentUserId] = useState(null);
   const channelRef = useRef(null);
   const timerRef = useRef(null);
+  const channelIdRef = useRef(
+    `blind-${Math.random().toString(36).slice(2, 10)}-${Date.now()}`,
+  );
 
   // Obtener user id
   useEffect(() => {
@@ -68,8 +72,8 @@ export function useBlindChat(chatId) {
     load();
 
     // Suscribirse a nuevos mensajes
-    const channel = supabase
-      .channel(`blind-${chatId}`)
+        const channel = supabase
+      .channel(`${channelIdRef.current}-${chatId}`)
       .on(
         "postgres_changes",
         {

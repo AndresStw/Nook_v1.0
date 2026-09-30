@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { Check, X } from "lucide-react";
+import { soundManager } from "../../lib/sounds";
 
 const READING_TIME = 8;
 const DECIDING_TIME = 20;
@@ -159,6 +160,7 @@ export default function BlindChatInvite() {
 
       if (data.status === "active") {
         setResult("matched");
+        soundManager.play("match"); // 🔊 Sonido de Match exitoso
       } else if (data.status === "cancelled") {
         setResult("passed");
       } else if (data.status === "expired") {
@@ -211,6 +213,7 @@ export default function BlindChatInvite() {
 
   // Handlers
   const startInvite = (chat) => {
+    soundManager.play("blind_chat"); // 🔊 Sonido al recibir la invitación de Chispazo
     setInvite(chat);
     setPhase("reading");
     setTimeLeft(READING_TIME);

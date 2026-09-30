@@ -127,12 +127,12 @@ export default function Explore() {
     <AppLayout>
       <div className="h-full flex flex-col gap-4">
         {/* Header */}
-        <div className="flex items-center justify-between shrink-0">
-          <div>
-            <h1 className="text-xl font-bold text-text-primary mb-0.5">
+        <div className="flex items-center justify-between shrink-0 gap-3">
+          <div className="min-w-0">
+            <h1 className="text-lg md:text-xl font-bold text-text-primary mb-0.5">
               Explorar
             </h1>
-            <p className="text-[12px] text-text-secondary">
+            <p className="text-[11px] md:text-[12px] text-text-secondary truncate">
               {users.length} {users.length === 1 ? "persona" : "personas"} cerca
               de ti
             </p>
@@ -161,10 +161,10 @@ export default function Explore() {
               <label className="text-[10px] text-text-tertiary uppercase tracking-wider font-semibold mb-2 block">
                 Ciudad
               </label>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 md:flex-wrap md:overflow-visible">
                 <button
                   onClick={() => setSelectedCity("")}
-                  className={`text-[11px] px-3 py-1.5 rounded-full border transition-all ${
+                  className={`text-[11px] px-3 py-1.5 rounded-full border transition-all shrink-0 ${
                     !selectedCity
                       ? "bg-accent text-bg border-accent font-semibold"
                       : "bg-bg-alt border-border text-text-secondary hover:border-accent/40"
@@ -176,7 +176,7 @@ export default function Explore() {
                   <button
                     key={`${c}-${idx}`}
                     onClick={() => setSelectedCity(c)}
-                    className={`text-[11px] px-3 py-1.5 rounded-full border transition-all ${
+                    className={`text-[11px] px-3 py-1.5 rounded-full border transition-all shrink-0 ${
                       selectedCity === c
                         ? "bg-accent text-bg border-accent font-semibold"
                         : "bg-bg-alt border-border text-text-secondary hover:border-accent/40"
@@ -274,10 +274,10 @@ export default function Explore() {
             <div className="text-center py-12">
               <Users size={32} className="text-text-tertiary mx-auto mb-3" />
               <p className="text-[13px] text-text-secondary mb-1">
-                No hay perfiles con esos filtros
+                Nadie por aquí con esos filtros 🕵️
               </p>
               <p className="text-[11px] text-text-tertiary">
-                Prueba quitando algún filtro
+                Prueba quitar alguno, quizás aparezcan más
               </p>
             </div>
           )}
@@ -332,7 +332,7 @@ function Section({ title, subtitle, users }) {
         <p className="text-[11px] text-text-tertiary">{subtitle}</p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
         {users.map((u) => (
           <ProfileGridCard key={u.id} profile={u} />
         ))}
@@ -378,11 +378,12 @@ function ProfileGridCard({ profile }) {
         </div>
       )}
 
-      <div className="absolute inset-x-0 bottom-0 p-3 text-white">
-        <div className="text-[13px] font-semibold mb-0.5 truncate">
+      <div className="absolute inset-x-0 bottom-0 p-2 md:p-3 text-white">
+        <div className="text-[11.5px] md:text-[13px] font-semibold mb-0.5 truncate">
           {profile.name}
           {profile.age ? `, ${profile.age}` : ""}
         </div>
+
         <div className="flex items-center gap-1 text-[10px] text-white/85 mb-1.5">
           <MapPin size={9} />
           {profile.city || "Sin ciudad"}

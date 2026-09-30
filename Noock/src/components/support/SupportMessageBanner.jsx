@@ -84,6 +84,13 @@ export default function SupportMessageBanner() {
       border: "rgba(168, 85, 247, 0.3)",
       emoji: "🔔",
     },
+    founder_reply: {
+      icon: MessageCircle,
+      color: "#14E5C0",
+      bg: "rgba(20, 229, 192, 0.08)",
+      border: "rgba(20, 229, 192, 0.3)",
+      emoji: "💬",
+    },
   };
 
   const c = config[message.type] || config.info;

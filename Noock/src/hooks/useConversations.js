@@ -1,8 +1,11 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
 
 export function useConversations() {
   const [conversations, setConversations] = useState([]);
+  const channelIdRef = useRef(
+    `conv-${Math.random().toString(36).slice(2, 10)}-${Date.now()}`,
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -24,7 +27,7 @@ export function useConversations() {
 
     // Suscripción Realtime a cambios en la DB
     const channel = supabase
-      .channel("conversations-updates")
+      .channel(channelIdRef.current)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages" },

@@ -117,6 +117,11 @@ export default function PublicProfile() {
                   src={mainPhoto}
                   alt={profile.name}
                   className="w-full h-full object-cover"
+                  style={{
+                    objectPosition: photos[0]?.focal_point
+                      ? `${photos[0].focal_point.x}% ${photos[0].focal_point.y}%`
+                      : "50% 50%",
+                  }}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-text-tertiary text-[40px]">
@@ -160,7 +165,7 @@ export default function PublicProfile() {
                 </div>
 
                 {profile.tagline && (
-                  <p className="text-[13px] italic text-white/95 max-w-2xl">
+                  <p className="text-[13px] italic text-white/95 max-w-2xl line-clamp-1">
                     "{profile.tagline}"
                   </p>
                 )}
@@ -309,6 +314,11 @@ export default function PublicProfile() {
                       src={photo.url}
                       alt={`Foto ${i + 1}`}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      style={{
+                        objectPosition: photo.focal_point
+                          ? `${photo.focal_point.x}% ${photo.focal_point.y}%`
+                          : "50% 50%",
+                      }}
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
                       <Maximize2

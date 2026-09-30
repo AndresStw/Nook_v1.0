@@ -6,22 +6,30 @@ import Logo from "../components/ui/Logo";
 import WallOfVoices from "../components/ui/WallOfVoices";
 import "../assets/Css/landing.css";
 import "../assets/Css/login.css";
+import { useSound } from "../hooks/useSound";
+import LoginAnimation from "../components/auth/LoginAnimation";
+import { APP_VERSION } from "../lib/version";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signIn, profile } = useAuth(); //  profile
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showAnimation, setShowAnimation] = useState(false);
+  const { play } = useSound();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+
     try {
       await signIn(email, password);
-      navigate("/feed");
+      play("login");
+      setShowAnimation(true); //  solo activa la animación
+      // Ya NO navegamos aquí: la animación maneja la redirección
     } catch (err) {
       console.error(err);
       if (err.message.includes("Invalid login credentials")) {
@@ -33,6 +41,21 @@ export default function Login() {
       setLoading(false);
     }
   };
+
+  //  Callback cuando termina la animación
+  const handleAnimationComplete = () => {
+    navigate("/feed");
+  };
+
+  //  Render de la animación (reemplaza todo el login mientras corre)
+  if (showAnimation) {
+    return (
+      <LoginAnimation
+        userName={profile?.name?.split(" ")[0] || ""}
+        onComplete={handleAnimationComplete}
+      />
+    );
+  }
 
   return (
     <main className="nook-auth">
@@ -93,10 +116,10 @@ export default function Login() {
             {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
-
         <p className="nook-auth__footer">
           ¿No tienes cuenta? <Link to="/register">Regístrate</Link>
         </p>
+        <p className="nook-auth__version">{APP_VERSION}</p>
       </div>
     </main>
   );

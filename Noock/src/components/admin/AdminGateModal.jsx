@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Shield, X, Loader2, Lock, AlertCircle } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
+//Componente
 export default function AdminGateModal({ open, onClose }) {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
@@ -46,11 +47,11 @@ export default function AdminGateModal({ open, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[250] bg-black/70 backdrop-blur-md flex items-center justify-center p-4"
+      className="fixed inset-0 z-[250] bg-black/70 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4"
       onClick={handleClose}
     >
       <div
-        className="bg-bg-surface rounded-3xl max-w-md w-full p-6 shadow-2xl"
+        className="bg-bg-surface rounded-t-3xl sm:rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between mb-5">
@@ -63,7 +64,7 @@ export default function AdminGateModal({ open, onClose }) {
                 Acceso restringido
               </h2>
               <p className="text-[11px] text-text-tertiary">
-                Solo el fundador puede entrar aquí
+                Solo el equipo de soporte puede entrar aquí
               </p>
             </div>
           </div>

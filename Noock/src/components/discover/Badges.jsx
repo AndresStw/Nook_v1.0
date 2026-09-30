@@ -4,7 +4,7 @@ const BADGE_DEFS = {
   founder: {
     icon: Crown,
     tooltip: "Fundador",
-    special: true, // ← activa la animación
+    special: true, // activa la animación
   },
   verified: {
     icon: CheckCircle2,
@@ -26,6 +26,7 @@ const BADGE_DEFS = {
   },
 };
 
+//Componente
 export default function Badges({ profile }) {
   if (!profile) return null;
 

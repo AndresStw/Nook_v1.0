@@ -40,21 +40,21 @@ export default function Connections() {
       <div className="h-full flex flex-col gap-4">
         {/* Header */}
         <div className="shrink-0">
-          <h1 className="text-xl font-bold text-text-primary mb-0.5">
+          <h1 className="text-lg md:text-xl font-bold text-text-primary mb-0.5">
             Conexiones
           </h1>
-          <p className="text-[12px] text-text-secondary">
+          <p className="text-[11px] md:text-[12px] text-text-secondary">
             {groups.new.length + groups.active.length} conexiones activas
           </p>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 shrink-0 border-b border-border-soft">
+        <div className="flex gap-1 shrink-0 border-b border-border-soft overflow-x-auto">
           {tabs.map(({ id, label, icon: Icon, count }) => (
             <button
               key={id}
               onClick={() => setActiveTab(id)}
-              className={`flex items-center gap-2 px-4 py-2 text-[12px] font-medium border-b-2 -mb-px transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 text-[12px] font-medium border-b-2 -mb-px transition-colors shrink-0 whitespace-nowrap ${
                 activeTab === id
                   ? "border-text-primary text-text-primary"
                   : "border-transparent text-text-secondary hover:text-text-primary"
@@ -90,7 +90,7 @@ export default function Connections() {
           )}
 
           {!loading && currentList.length > 0 && (
-            <div className="grid grid-cols-3 gap-3 pb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pb-4">
               {currentList.map((conn) => (
                 <ConnectionCard
                   key={conn.match_id}
@@ -120,15 +120,21 @@ function ConnectionCard({ conn, onOpen }) {
   return (
     <button
       onClick={onOpen}
-      className="bg-bg-surface border border-border rounded-2xl p-3 shadow-soft hover:shadow-card hover:border-accent/40 transition-all text-left"
+      className="bg-bg-surface border border-border rounded-2xl p-3 shadow-soft hover:shadow-card hover:border-accent/40 transition-all text-left w-full"
     >
       <div className="flex items-start gap-3">
+        {/* Avatar */}
         <div className="relative shrink-0">
           {conn.other_photo ? (
             <img
               src={conn.other_photo}
               alt={conn.other_name}
               className="w-14 h-14 rounded-full object-cover"
+              style={{
+                objectPosition: conn.other_photo_focal
+                  ? `${conn.other_photo_focal.x}% ${conn.other_photo_focal.y}%`
+                  : "50% 50%",
+              }}
             />
           ) : (
             <div className="w-14 h-14 rounded-full bg-bg-alt flex items-center justify-center text-text-tertiary text-[18px]">
@@ -140,52 +146,54 @@ function ConnectionCard({ conn, onOpen }) {
           )}
         </div>
 
+        {/* Info */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-0.5 gap-2">
-            <div className="flex items-center gap-1.5 min-w-0 flex-1">
-              <div className="text-[13px] font-semibold text-text-primary truncate">
-                {conn.other_name}
-              </div>
-              <PiBadge pi={conn.other_pi || 0} size="xs" />
-              {conn.other_vip && (
-                <span className="text-[8.5px] font-bold px-1.5 py-0.5 rounded-full text-amber-700 bg-amber-100 shrink-0">
-                  VIP
-                </span>
-              )}
+          {/* Nombre + badges (fila 1) */}
+          <div className="flex items-center gap-1.5 mb-0.5 min-w-0">
+            <div className="text-[13.5px] font-semibold text-text-primary truncate">
+              {conn.other_name}
             </div>
-            <div className="text-[10px] text-text-tertiary shrink-0">
+            {conn.other_vip && (
+              <span className="text-[8.5px] font-bold px-1.5 py-0.5 rounded-full text-amber-700 bg-amber-100 shrink-0 whitespace-nowrap">
+                VIP
+              </span>
+            )}
+            <div className="text-[10px] text-text-tertiary shrink-0 ml-auto">
               {timeAgo}
             </div>
           </div>
 
-          <p
-            className={`text-[12px] truncate ${
-              conn.unread_count > 0
-                ? "text-text-primary font-medium"
-                : "text-text-secondary"
-            }`}
-          >
-            {conn.last_message || "Di hola 👋"}
-          </p>
+          {/* PI Badge (fila 2 separada) */}
+          <div className="flex items-center gap-2 mb-1">
+            <PiBadge pi={conn.other_pi || 0} size="xs" />
+            {conn.total_messages > 0 && (
+              <div className="flex items-center gap-1 text-[10px] text-text-tertiary">
+                <CheckCheck size={10} className="text-accent" />
+                <span>{conn.total_messages}</span>
+              </div>
+            )}
+            {conn.total_messages === 0 && (
+              <div className="flex items-center gap-1 text-[10px] text-text-tertiary">
+                <Sparkles size={10} className="text-accent" />
+                <span>Match nuevo</span>
+              </div>
+            )}
+          </div>
 
-          <div className="flex items-center justify-between mt-2">
-            <div className="flex items-center gap-1 text-[10px] text-text-tertiary">
-              {conn.total_messages > 0 ? (
-                <>
-                  <CheckCheck size={11} className="text-accent" />
-                  <span>{conn.total_messages} mensajes</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles size={11} className="text-accent" />
-                  <span>Match nuevo</span>
-                </>
-              )}
-            </div>
-
+          {/* Último mensaje + unread */}
+          <div className="flex items-center justify-between gap-2">
+            <p
+              className={`text-[12px] truncate ${
+                conn.unread_count > 0
+                  ? "text-text-primary font-medium"
+                  : "text-text-secondary"
+              }`}
+            >
+              {conn.last_message || "Di hola 👋"}
+            </p>
             {conn.unread_count > 0 && (
-              <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-text-primary text-bg text-[10px] font-semibold flex items-center justify-center">
-                {conn.unread_count}
+              <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-text-primary text-bg text-[10px] font-semibold flex items-center justify-center shrink-0">
+                {conn.unread_count > 9 ? "9+" : conn.unread_count}
               </span>
             )}
           </div>

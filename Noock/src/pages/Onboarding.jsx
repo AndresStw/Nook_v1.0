@@ -5,13 +5,10 @@ import { useOnboardingStore } from "../stores/onboardingStore";
 import Step1Welcome from "../components/onboarding/Step1Welcome";
 import Step2Basic from "../components/onboarding/Step2Basic";
 import Step3Photos from "../components/onboarding/Step3Photos";
-import Step4Questions from "../components/onboarding/Step4Questions";
-import Step5Answers from "../components/onboarding/Step5Answers";
-import Step6Interests from "../components/onboarding/Step6Interests";
-import Step7Details from "../components/onboarding/Step7Details";
-import Step8Security from "../components/onboarding/Step8Security";
-import Step9SecurityRules from "../components/onboarding/Step9SecurityRules";
-import Step10Complete from "../components/onboarding/Step10Complete";
+import Step4Interests from "../components/onboarding/Step6Interests"; // reuso
+import Step5Security from "../components/onboarding/Step8Security";
+import Step6SecurityRules from "../components/onboarding/Step9SecurityRules";
+import Step7Complete from "../components/onboarding/Step10Complete"; // reuso
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -34,19 +31,13 @@ export default function Onboarding() {
     case 3:
       return <Step3Photos {...props} />;
     case 4:
-      return <Step4Questions {...props} />;
+      return <Step4Interests {...props} />;
     case 5:
-      return <Step5Answers {...props} />;
+      return <Step5Security {...props} />;
     case 6:
-      return <Step6Interests {...props} />;
+      return <Step6SecurityRules {...props} />;
     case 7:
-      return <Step7Details {...props} />;
-    case 8:
-      return <Step8Security {...props} />;
-    case 9:
-      return <Step9SecurityRules {...props} />;
-    case 10:
-      return <Step10Complete onBack={prevStep} />;
+      return <Step7Complete onBack={prevStep} />;
     default:
       return <Step1Welcome {...props} />;
   }

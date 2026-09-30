@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Search, MessageCircle, Clock } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import AppLayout from "../components/layout/AppLayout";
 import ChatPanel from "../components/chat/ChatPanel";
 import { useConversations } from "../hooks/useConversations";
@@ -8,9 +8,12 @@ import { useBlindChats } from "../hooks/useBlindChats";
 
 export default function Messages() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { conversations, loading } = useConversations();
   const { blindChats, loading: loadingBlinds } = useBlindChats();
-  const [selectedId, setSelectedId] = useState(null);
+  const [selectedId, setSelectedId] = useState(
+    searchParams.get("match") || null, // auto-select desde URL
+  );
   const [search, setSearch] = useState("");
   const [showArchived, setShowArchived] = useState(false);
 
@@ -40,10 +43,14 @@ export default function Messages() {
 
   return (
     <AppLayout>
-      <div className="h-full grid grid-cols-[320px_1fr] gap-4">
-        <div className="bg-bg-surface border border-border rounded-2xl flex flex-col overflow-hidden shadow-soft">
-          <div className="p-3.5 border-b border-border-soft shrink-0">
-            <h2 className="text-[14px] font-bold text-text-primary mb-2.5">
+      <div className="h-full grid grid-cols-1 md:grid-cols-[320px_1fr] gap-3 md:gap-4">
+        <div
+          className={`bg-bg-surface border border-border rounded-2xl flex flex-col overflow-hidden shadow-soft ${
+            selectedId ? "hidden md:flex" : "flex"
+          }`}
+        >
+          <div className="p-3 md:p-3.5 border-b border-border-soft shrink-0">
+            <h2 className="text-[14px] font-bold text-text-primary mb-2 md:mb-2.5">
               Mensajes
             </h2>
             <div className="relative">
@@ -149,9 +156,13 @@ export default function Messages() {
           </div>
         </div>
 
-        <div className="min-h-0">
+        <div className={`min-h-0 ${selectedId ? "block" : "hidden md:block"}`}>
           {selectedId ? (
-            <ChatPanel matchId={selectedId} otherUser={otherUser} />
+            <ChatPanel
+              matchId={selectedId}
+              otherUser={otherUser}
+              onBack={() => setSelectedId(null)}
+            />
           ) : (
             <div className="h-full flex items-center justify-center bg-bg-surface border border-border rounded-2xl">
               <div className="text-center">

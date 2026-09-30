@@ -3,13 +3,15 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { supabase } from "../../lib/supabase";
 
-const ADMIN_EMAILS = ["nook.admin.bogota@gmail.com"];
+const ADMIN_EMAILS = ["nook.admin.bogota@gmail.com"]; //Perfil aagregado tambien a SupaBase rol (Founder)
 
+//Componente
 export default function AdminRoute({ children }) {
   const { user, profile, loading } = useAuth();
   const [checking, setChecking] = useState(true);
   const [hasSession, setHasSession] = useState(false);
 
+  //Hooks #1
   useEffect(() => {
     const check = async () => {
       const token = sessionStorage.getItem("nook_admin_token");
@@ -47,6 +49,7 @@ export default function AdminRoute({ children }) {
   if (!user) return <Navigate to="/login" replace />;
 
   if (!ADMIN_EMAILS.includes(user.email) || profile?.role !== "founder") {
+    
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center p-6">
         <div className="bg-bg-surface border border-error/30 rounded-2xl p-8 max-w-md text-center">

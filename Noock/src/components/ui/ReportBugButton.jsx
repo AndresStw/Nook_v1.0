@@ -38,8 +38,32 @@ const CATEGORIES = [
   },
 ];
 
-export default function ReportBugButton() {
-  const [open, setOpen] = useState(false);
+/**
+ * Modal de reporte + botón flotante opcional.
+ *
+ * Uso 1 (no controlado, botón flotante):
+ *   <ReportBugButton />
+ *
+ * Uso 2 (controlado, sin botón flotante, se abre desde afuera):
+ *   <ReportBugButton open={bugOpen} onClose={() => setBugOpen(false)} />
+ */
+export default function ReportBugButton({
+  open: controlledOpen,
+  onClose: controlledOnClose,
+} = {}) {
+  const isControlled = controlledOpen !== undefined;
+
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = isControlled ? controlledOpen : internalOpen;
+
+  const setOpen = (val) => {
+    if (isControlled) {
+      if (!val) controlledOnClose?.();
+    } else {
+      setInternalOpen(val);
+    }
+  };
+
   const [category, setCategory] = useState(null);
   const [content, setContent] = useState("");
   const [sending, setSending] = useState(false);
@@ -121,15 +145,17 @@ export default function ReportBugButton() {
 
   return (
     <>
-      {/* Botón flotante */}
-      <button
-        onClick={() => setOpen(true)}
-        className="report-bug-btn"
-        title="Reportar un bug o idea"
-        aria-label="Reportar"
-      >
-        <Bug size={20} strokeWidth={2.2} />
-      </button>
+      {/* Botón flotante SOLO cuando NO es controlado (fallback de escritorio) */}
+      {!isControlled && (
+        <button
+          onClick={() => setOpen(true)}
+          className="report-bug-btn hidden md:flex"
+          title="Reportar un bug o idea"
+          aria-label="Reportar"
+        >
+          <Bug size={20} strokeWidth={2.2} />
+        </button>
+      )}
 
       {/* Modal */}
       {open && (
@@ -256,14 +282,13 @@ export default function ReportBugButton() {
                   ) : (
                     <>
                       <Send size={14} />
-                      Enviar al fundador
+                      Enviar a SOPORTE
                     </>
                   )}
                 </button>
 
                 <p className="report-bug-hint">
-                  Adjuntamos automáticamente la URL y tu navegador para que el
-                  fundador pueda reproducir el bug.
+                  Adjuntamos automáticamente la URL y tu navegador para que SOPORTE pueda reproducir el bug.
                 </p>
               </>
             )}

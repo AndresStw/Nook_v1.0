@@ -8,23 +8,28 @@ import {
   ChevronLeft,
   ChevronRight,
   Maximize2,
+  Sparkles,
 } from "lucide-react";
 import PiBadge from "../ui/PiBadge";
 import ProfilePanicButton from "./ProfilePanicButton";
 import PhotoLightbox from "./PhotoLightbox";
+import { GENDER_INTERNAL } from "../../lib/profileLabels";
 
+//Componente
 export default function DiscoverCard({
   profile,
   onLike,
   onPass,
   onSave,
   onReport,
+  onShowDetails,
   isFavorited = false,
   disabled,
 }) {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
+  //Hooks #1
   useEffect(() => {
     setPhotoIndex(0);
     setLightboxOpen(false);
@@ -35,6 +40,10 @@ export default function DiscoverCard({
   const photos = profile.photos || [];
   const currentPhoto = photos[photoIndex]?.url || "";
   const interestNames = (profile.interests || []).map((i) => i.name);
+  const genderKey = profile.gender_internal || profile.gender;
+  const genderLabel =
+    GENDER_INTERNAL[genderKey] ||
+    (genderKey && genderKey !== "prefiero_no_decir" ? genderKey : null);
 
   const nextPhoto = (e) => {
     e?.stopPropagation();
@@ -71,6 +80,11 @@ export default function DiscoverCard({
             alt={profile.name}
             onClick={handleImageClick}
             className="absolute inset-0 w-full h-full object-cover cursor-pointer select-none"
+            style={{
+              objectPosition: photos[photoIndex]?.focal_point
+                ? `${photos[photoIndex].focal_point.x}% ${photos[photoIndex].focal_point.y}%`
+                : "50% 50%",
+            }}
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-bg-alt to-border flex items-center justify-center">
@@ -134,9 +148,9 @@ export default function DiscoverCard({
         <div className="absolute inset-x-0 bottom-0 h-[75%] bg-gradient-to-t from-black via-black/75 to-transparent pointer-events-none" />
 
         {/* Info del perfil */}
-        <div className="absolute inset-x-0 bottom-0 p-4 text-white">
+        <div className="absolute inset-x-0 bottom-0 p-3 md:p-4 text-white">
           <div className="flex items-center gap-1.5 mb-0.5">
-            <h2 className="text-xl font-bold leading-tight drop-shadow-lg">
+            <h2 className="text-lg md:text-xl font-bold leading-tight drop-shadow-lg">
               {profile.name}
               {profile.age ? `, ${profile.age}` : ""}
             </h2>
@@ -148,13 +162,23 @@ export default function DiscoverCard({
             )}
           </div>
 
-          <div className="flex items-center gap-1 text-[11px] text-white/90 mb-2">
-            <MapPin size={12} />
-            <span>{profile.city || "Sin ciudad"}</span>
+          <div className="flex items-center gap-1.5 text-[11px] text-white/90 mb-2 flex-wrap">
+            <div className="flex items-center gap-1">
+              <MapPin size={12} />
+              <span>{profile.city || "Sin ciudad"}</span>
+            </div>
+            {genderLabel && (
+              <>
+                <span className="text-white/60">·</span>
+                <span className="bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full text-[10px] font-medium text-white">
+                  {genderLabel}
+                </span>
+              </>
+            )}
           </div>
 
           {profile.bio && (
-            <p className="text-[12.5px] text-white/95 leading-snug mb-2.5 line-clamp-2">
+            <p className="text-[12px] md:text-[12.5px] text-white/95 leading-snug mb-2 md:mb-2.5 line-clamp-1 md:line-clamp-2">
               {profile.bio}
             </p>
           )}
@@ -171,6 +195,23 @@ export default function DiscoverCard({
               ))}
             </div>
           )}
+
+          {/* Botón "Ver respuestas" solo en móvil */}
+          {onShowDetails && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onShowDetails();
+              }}
+              className="md:hidden w-full flex items-center justify-center gap-2 py-2.5 mb-3 rounded-xl bg-white/95 backdrop-blur-sm text-text-primary text-[12.5px] font-semibold hover:bg-white transition-colors shadow-lg"
+            >
+              <Sparkles size={13} className="text-accent-hover" />
+              Ver respuestas y detalles
+            </button>
+          )}
+
+          {/* Botones de accion */}
+          <div className="flex items-center justify-center gap-2.5"></div>
           {/* Botones de accion */}
           <div className="flex items-center justify-center gap-2.5">
             <button

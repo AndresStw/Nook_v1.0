@@ -5,6 +5,7 @@ import { useOnboardingStore } from "../../stores/onboardingStore";
 import { usePhotos } from "../../hooks/usePhotos";
 import { useAuth } from "../../hooks/useAuth";
 
+//Componente
 export default function Step2Photos({ onNext, onBack }) {
   const { user } = useAuth();
   const { photos, addPhoto, removePhoto } = useOnboardingStore();

@@ -1,10 +1,11 @@
 import { Shield, AlertCircle } from "lucide-react";
 import OnboardingLayout from "./OnboardingLayout";
 
+//Componente
 export default function Step6Security({ onNext, onBack }) {
   return (
     <OnboardingLayout
-      step={8}
+      step={5}
       title="Tu Botón de Pánico"
       subtitle="Es el botón más importante de Nook. Memorízalo."
       onBack={onBack}

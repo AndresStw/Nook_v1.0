@@ -9,8 +9,10 @@ import {
   Sparkles as SparkIcon,
   Church,
   Star,
+  User,
 } from "lucide-react";
 import {
+  GENDER_INTERNAL,
   SEXUAL_ORIENTATION,
   MARITAL_STATUS,
   HAS_KIDS,
@@ -26,6 +28,16 @@ export default function ProfileAttributes({ profile }) {
   if (!profile) return null;
 
   const items = [];
+
+  // Género
+  const genderKey = profile.gender_internal || profile.gender;
+  const genderLabel = GENDER_INTERNAL[genderKey];
+  if (genderLabel && genderKey !== "prefiero_no_decir") {
+    items.push({
+      icon: User,
+      label: genderLabel,
+    });
+  }
 
   // Orientación sexual
   if (

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSound } from "../hooks/useSound";
 import { useNavigate } from "react-router-dom";
 import {
   Shield,
@@ -22,14 +23,21 @@ import {
   Users,
   TrendingUp,
   Bell,
+  Mail,
+  Plus,
+  Trash2,
+  ShieldOff,
+  Download, //Nuevo para el CVG de reportes
 } from "lucide-react";
 import AppLayout from "../components/layout/AppLayout";
 import { supabase } from "../lib/supabase";
+import { exportToCsv, buildFilename } from "../lib/exportCsv";
 
 export default function AdminPanel() {
   const navigate = useNavigate();
   const [tab, setTab] = useState("verifications");
   const [stats, setStats] = useState(null);
+  const { play } = useSound();
 
   // Estados de verificación
   const [verifications, setVerifications] = useState([]);
@@ -47,6 +55,10 @@ export default function AdminPanel() {
   const [replyText, setReplyText] = useState("");
   const [piToAward, setPiToAward] = useState(0);
 
+  // Filtros de mensajes
+  const [messageFilterCategory, setMessageFilterCategory] = useState("all");
+  const [messageFilterStatus, setMessageFilterStatus] = useState("all");
+
   // Estados generales
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -55,6 +67,12 @@ export default function AdminPanel() {
   // Estados de herramientas
   const [piRunning, setPiRunning] = useState(false);
   const [piResult, setPiResult] = useState(null);
+
+  // Estados de banned_emails
+  const [bannedEmails, setBannedEmails] = useState([]);
+  const [showBanForm, setShowBanForm] = useState(false);
+  const [newBanEmail, setNewBanEmail] = useState("");
+  const [newBanReason, setNewBanReason] = useState("");
 
   const showToast = (message, type = "ok") => {
     setFeedback({ message, type });
@@ -105,6 +123,16 @@ export default function AdminPanel() {
     }
   };
 
+  const loadBannedEmails = async () => {
+    const { data, error } = await supabase.rpc("get_banned_emails");
+    if (error) {
+      console.error(error);
+      showToast("Error cargando emails bloqueados", "error");
+    } else {
+      setBannedEmails(data || []);
+    }
+  };
+
   const loadAll = async () => {
     setLoading(true);
     await Promise.all([
@@ -112,6 +140,7 @@ export default function AdminPanel() {
       loadVerifications(),
       loadReports(),
       loadMessages(),
+      loadBannedEmails(),
     ]);
     setLoading(false);
   };
@@ -177,6 +206,7 @@ export default function AdminPanel() {
     }
 
     showToast(msg, "ok");
+    play("warning");
     setSelectedReport(null);
     setReportNotes("");
     loadAll();
@@ -208,6 +238,10 @@ export default function AdminPanel() {
       `Respuesta enviada ${piToAward > 0 ? `(+${piToAward} PI)` : ""}`,
       "ok",
     );
+    // Sonido de recompensa si se otorgaron PI
+    if (piToAward > 0) {
+      play("pi_reward");
+    }
     setSelectedMessage(null);
     setReplyText("");
     setPiToAward(0);
@@ -235,6 +269,112 @@ export default function AdminPanel() {
     if (error) return showToast("Error: " + error.message, "error");
     setPiResult(data);
     showToast(`✅ ${data.users_processed} usuarios actualizados`, "ok");
+  };
+
+  // ============================================
+  // HANDLERS — EMAILS BLOQUEADOS
+  // ============================================
+  const handleBanEmail = async () => {
+    if (!newBanEmail.trim()) return showToast("Escribe un email", "error");
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newBanEmail.trim())) {
+      return showToast("Email inválido", "error");
+    }
+
+    setProcessing(true);
+    const { data, error } = await supabase.rpc("ban_email", {
+      p_email: newBanEmail.trim().toLowerCase(),
+      p_reason: newBanReason.trim() || null,
+    });
+    setProcessing(false);
+
+    if (error || data?.error) {
+      return showToast(error?.message || data.error, "error");
+    }
+
+    showToast(`Email bloqueado: ${newBanEmail}`, "ok");
+    setNewBanEmail("");
+    setNewBanReason("");
+    setShowBanForm(false);
+    loadBannedEmails();
+  };
+
+  const handleUnbanEmail = async (email) => {
+    if (!confirm(`¿Desbloquear ${email}?`)) return;
+
+    setProcessing(true);
+    const { error } = await supabase.rpc("unban_email", { p_email: email });
+    setProcessing(false);
+
+    if (error) return showToast(error.message, "error");
+    showToast("Email desbloqueado", "ok");
+    loadBannedEmails();
+  };
+
+  // ============================================
+  // HANDLERS — EXPORTAR MENSAJES
+  // ============================================
+  const filteredMessages = messages.filter((m) => {
+    if (
+      messageFilterCategory !== "all" &&
+      m.category !== messageFilterCategory
+    ) {
+      return false;
+    }
+    if (messageFilterStatus === "unread" && m.read_at) return false;
+    if (messageFilterStatus === "read" && !m.read_at) return false;
+    if (messageFilterStatus === "replied" && !m.replied_at) return false;
+    if (messageFilterStatus === "pending" && m.replied_at) return false;
+    return true;
+  });
+
+  const handleExportMessages = () => {
+    if (filteredMessages.length === 0) {
+      showToast("No hay mensajes para exportar", "error");
+      return;
+    }
+
+    try {
+      const categorySuffix =
+        messageFilterCategory === "all" ? "" : messageFilterCategory;
+      const filename = buildFilename("nook-mensajes", categorySuffix);
+
+      exportToCsv(filename, filteredMessages, [
+        { label: "ID", getValue: (m) => m.id },
+        {
+          label: "Fecha",
+          getValue: (m) => new Date(m.created_at).toLocaleString("es-CO"),
+        },
+        { label: "Categoría", getValue: (m) => m.category },
+        { label: "Usuario", getValue: (m) => m.user_name || "Anónimo" },
+        { label: "Ciudad", getValue: (m) => m.user_city || "" },
+        { label: "Mensaje", getValue: (m) => m.content || "" },
+        { label: "Leído", getValue: (m) => (m.read_at ? "Sí" : "No") },
+        { label: "Respondido", getValue: (m) => (m.replied_at ? "Sí" : "No") },
+        { label: "Respuesta", getValue: (m) => m.reply_content || "" },
+        { label: "PI otorgados", getValue: (m) => m.pi_awarded || 0 },
+        { label: "URL", getValue: (m) => m.context_data?.url || "" },
+        { label: "Ruta", getValue: (m) => m.context_data?.pathname || "" },
+        {
+          label: "Pantalla",
+          getValue: (m) =>
+            m.context_data?.viewport
+              ? `${m.context_data.viewport.width}x${m.context_data.viewport.height}`
+              : "",
+        },
+        {
+          label: "Navegador",
+          getValue: (m) => m.context_data?.userAgent || "",
+        },
+        { label: "Idioma", getValue: (m) => m.context_data?.language || "" },
+      ]);
+
+      showToast(`Exportados ${filteredMessages.length} mensajes`, "ok");
+    } catch (err) {
+      console.error("Error exportando:", err);
+      showToast("Error al exportar: " + err.message, "error");
+    }
   };
 
   const handleCloseAdminSession = async () => {
@@ -375,6 +515,14 @@ export default function AdminPanel() {
               badgeColor="accent"
             />
             <TabButton
+              active={tab === "banned_emails"}
+              onClick={() => setTab("banned_emails")}
+              icon={ShieldOff}
+              label="Emails bloqueados"
+              badge={bannedEmails.length}
+              badgeColor="error"
+            />
+            <TabButton
               active={tab === "tools"}
               onClick={() => setTab("tools")}
               icon={Sparkles}
@@ -494,7 +642,56 @@ export default function AdminPanel() {
           {/* === TAB MENSAJES === */}
           {!loading && tab === "messages" && (
             <>
-              {messages.length === 0 ? (
+              {/* Barra de filtros y export */}
+              {messages.length > 0 && (
+                <div className="flex items-center gap-2 mb-4 flex-wrap">
+                  <select
+                    value={messageFilterCategory}
+                    onChange={(e) => setMessageFilterCategory(e.target.value)}
+                    className="px-3 py-2 bg-bg-surface border border-border rounded-lg text-[12px] text-text-primary focus:outline-none focus:border-accent cursor-pointer"
+                  >
+                    <option value="all">Todas las categorías</option>
+                    <option value="bug">🐛 Bugs</option>
+                    <option value="idea">💡 Ideas</option>
+                    <option value="queja">⚠️ Quejas</option>
+                    <option value="saludo">👋 Saludos</option>
+                    <option value="gracias">💚 Gracias</option>
+                    <option value="amor">💕 Amor</option>
+                  </select>
+
+                  <select
+                    value={messageFilterStatus}
+                    onChange={(e) => setMessageFilterStatus(e.target.value)}
+                    className="px-3 py-2 bg-bg-surface border border-border rounded-lg text-[12px] text-text-primary focus:outline-none focus:border-accent cursor-pointer"
+                  >
+                    <option value="all">Todos los estados</option>
+                    <option value="unread">Sin leer</option>
+                    <option value="pending">Sin responder</option>
+                    <option value="replied">Respondidos</option>
+                  </select>
+
+                  <span className="text-[11px] text-text-tertiary">
+                    {filteredMessages.length} de {messages.length}
+                  </span>
+
+                  <button
+                    onClick={handleExportMessages}
+                    disabled={filteredMessages.length === 0}
+                    className="ml-auto flex items-center gap-1.5 px-3 py-2 rounded-lg bg-accent text-bg text-[12px] font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Download size={13} />
+                    Exportar CSV
+                  </button>
+                </div>
+              )}
+
+              {filteredMessages.length === 0 && messages.length > 0 ? (
+                <EmptyState
+                  icon="🔍"
+                  title="Sin mensajes con esos filtros"
+                  subtitle="Prueba cambiando los filtros de arriba"
+                />
+              ) : messages.length === 0 ? (
                 <EmptyState
                   icon="📭"
                   title="Sin mensajes"
@@ -502,7 +699,7 @@ export default function AdminPanel() {
                 />
               ) : (
                 <div className="space-y-2">
-                  {messages.map((msg) => (
+                  {filteredMessages.map((msg) => (
                     <button
                       key={msg.id}
                       onClick={() => setSelectedMessage(msg)}
@@ -559,6 +756,79 @@ export default function AdminPanel() {
                 </div>
               )}
             </>
+          )}
+          {/* === TAB EMAILS BLOQUEADOS === */}
+          {!loading && tab === "banned_emails" && (
+            <div className="space-y-4">
+              {/* Header con botón de agregar */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-[14px] font-bold text-text-primary">
+                    Emails bloqueados
+                  </h3>
+                  <p className="text-[11.5px] text-text-secondary mt-0.5">
+                    Los usuarios con estos emails no podrán registrarse de nuevo
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowBanForm(true)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-error text-white text-[12px] font-semibold hover:opacity-90 transition-opacity"
+                >
+                  <Plus size={13} />
+                  Bloquear email
+                </button>
+              </div>
+
+              {/* Lista */}
+              {bannedEmails.length === 0 ? (
+                <EmptyState
+                  icon="🛡️"
+                  title="Sin emails bloqueados"
+                  subtitle="Todos los emails pueden registrarse"
+                />
+              ) : (
+                <div className="space-y-2">
+                  {bannedEmails.map((item) => (
+                    <div
+                      key={item.email}
+                      className="flex items-center gap-3 p-3.5 bg-bg-surface border border-error/20 rounded-xl"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-error/10 flex items-center justify-center shrink-0">
+                        <Mail size={16} className="text-error" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[13px] font-semibold text-text-primary truncate">
+                          {item.email}
+                        </div>
+                        <div className="text-[11px] text-text-secondary mt-0.5">
+                          {item.reason || "Sin razón especificada"}
+                        </div>
+                        <div className="text-[10px] text-text-tertiary mt-1 flex items-center gap-2 flex-wrap">
+                          <span>
+                            🚫{" "}
+                            {new Date(item.banned_at).toLocaleDateString(
+                              "es-CO",
+                            )}
+                          </span>
+                          {item.banned_by_name && (
+                            <span>· por {item.banned_by_name}</span>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleUnbanEmail(item.email)}
+                        disabled={processing}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-bg-alt text-text-primary text-[11.5px] font-medium hover:bg-border transition-colors disabled:opacity-50 shrink-0"
+                        title="Desbloquear"
+                      >
+                        <Trash2 size={12} />
+                        Quitar
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
           {/* === TAB HERRAMIENTAS === */}
@@ -686,7 +956,7 @@ export default function AdminPanel() {
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="Ej: La seña no coincide..."
-              className="w-full px-4 py-3 bg-bg-alt border border-border rounded-xl text-[13px] focus:outline-none focus:border-accent"
+              className="w-full px-4 py-3 bg-bg-alt border border-border rounded-xl text-[13px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-accent"
             />
           </div>
 
@@ -778,7 +1048,7 @@ export default function AdminPanel() {
               value={reportNotes}
               onChange={(e) => setReportNotes(e.target.value)}
               placeholder="Ej: Ya van 3 reportes del mismo usuario..."
-              className="w-full px-4 py-3 bg-bg-alt border border-border rounded-xl text-[13px] focus:outline-none focus:border-accent"
+              className="w-full px-4 py-3 bg-bg-alt border border-border rounded-xl text-[13px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-accent"
             />
           </div>
 
@@ -913,7 +1183,7 @@ export default function AdminPanel() {
                   onChange={(e) => setReplyText(e.target.value)}
                   rows={3}
                   placeholder="Gracias por avisar, ya lo reviso..."
-                  className="w-full px-4 py-3 bg-bg-alt border border-border rounded-xl text-[13px] focus:outline-none focus:border-accent resize-none"
+                  className="w-full px-4 py-3 bg-bg-alt border border-border rounded-xl text-[13px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-accent resize-none"
                 />
               </div>
 
@@ -928,8 +1198,8 @@ export default function AdminPanel() {
                       onClick={() => setPiToAward(pi)}
                       className={`flex-1 py-2 rounded-lg border text-[12px] font-medium transition-colors ${
                         piToAward === pi
-                          ? "bg-accent text-bg border-accent"
-                          : "bg-bg-alt border-border text-text-secondary hover:border-accent/40"
+                          ? "bg-accent text-bg border-accent font-semibold"
+                          : "bg-bg-alt border-border text-text-primary hover:border-accent/40"
                       }`}
                     >
                       {pi === 0 ? "Ninguno" : `+${pi} PI`}
@@ -960,6 +1230,78 @@ export default function AdminPanel() {
               </div>
             </>
           )}
+        </Modal>
+      )}
+
+      {/* ============================================ */}
+      {/* MODAL — BLOQUEAR EMAIL */}
+      {/* ============================================ */}
+      {showBanForm && (
+        <Modal
+          onClose={() => {
+            setShowBanForm(false);
+            setNewBanEmail("");
+            setNewBanReason("");
+          }}
+          title="Bloquear email"
+          subtitle="Este email no podrá registrarse en Nook"
+        >
+          <div className="mb-4">
+            <Label>Email a bloquear</Label>
+            <input
+              type="email"
+              value={newBanEmail}
+              onChange={(e) => setNewBanEmail(e.target.value)}
+              placeholder="usuario@ejemplo.com"
+              autoFocus
+              className="w-full px-4 py-3 bg-bg-alt border border-border rounded-xl text-[13px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-accent"
+            />
+          </div>
+
+          <div className="mb-5">
+            <Label>Razón (opcional)</Label>
+            <input
+              type="text"
+              value={newBanReason}
+              onChange={(e) => setNewBanReason(e.target.value)}
+              placeholder="Ej: Bot detectado, spam, reincidente..."
+              className="w-full px-4 py-3 bg-bg-alt border border-border rounded-xl text-[13px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-accent"
+            />
+          </div>
+
+          <div className="p-3 bg-error/5 border border-error/20 rounded-xl mb-5">
+            <p className="text-[11.5px] text-text-secondary leading-relaxed">
+              ⚠️ Si este email ya está registrado, el bloqueo solo aplicará si
+              el usuario borra su cuenta. Los usuarios existentes no serán
+              expulsados automáticamente.
+            </p>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                setShowBanForm(false);
+                setNewBanEmail("");
+                setNewBanReason("");
+              }}
+              disabled={processing}
+              className="flex-1 py-3 rounded-xl bg-bg-alt text-text-primary font-semibold text-[13px] hover:bg-border disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleBanEmail}
+              disabled={processing || !newBanEmail.trim()}
+              className="flex-1 py-3 rounded-xl bg-error text-white font-semibold text-[13px] hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {processing ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Ban size={14} />
+              )}
+              Bloquear
+            </button>
+          </div>
         </Modal>
       )}
 
@@ -1060,11 +1402,11 @@ function Label({ children }) {
 function Modal({ children, onClose, title, subtitle }) {
   return (
     <div
-      className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
       onClick={onClose}
     >
       <div
-        className="bg-bg-surface rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+        className="bg-bg-surface rounded-t-3xl sm:rounded-3xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6">

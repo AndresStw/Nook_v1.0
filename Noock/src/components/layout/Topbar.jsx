@@ -7,6 +7,9 @@ import {
   Settings,
   User,
   Shield,
+  Volume2,
+  VolumeX,
+  Bug,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -15,6 +18,10 @@ import { useAuth } from "../../hooks/useAuth";
 import { supabase } from "../../lib/supabase";
 import Logo from "../ui/Logo";
 import AdminGateModal from "../admin/AdminGateModal";
+import { useSound } from "../../hooks/useSound";
+import { useNotifications } from "../../hooks/useNotifications";
+import LogoutAnimation from "../auth/LogoutAnimation";
+import ReportBugButton from "../ui/ReportBugButton";
 
 const THEMES = [
   { id: "menta", name: "Menta", color: "#14E5C0" },
@@ -29,23 +36,31 @@ const THEMES = [
 
 const ADMIN_EMAILS = ["nook.admin.bogota@gmail.com"];
 
+//Componente
 export default function TopBar() {
   const navigate = useNavigate();
   const { theme: currentTheme, setTheme } = useTheme();
   const { signOut, profile, user: authUser } = useAuth();
   const [searchValue, setSearchValue] = useState("");
+  const [showLogoutAnim, setShowLogoutAnim] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showThemes, setShowThemes] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [avatarLoading, setAvatarLoading] = useState(true);
   const menuRef = useRef(null);
-
+  const { muted, toggleMute, play } = useSound();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } =
+    useNotifications();
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef(null);
   const isAdmin =
     authUser?.email &&
     ADMIN_EMAILS.includes(authUser.email) &&
     profile?.role === "founder";
+  const [bugOpen, setBugOpen] = useState(false);
 
+  //Hook #1
   // Cargar avatar
   useEffect(() => {
     if (!profile?.id) return;
@@ -62,12 +77,16 @@ export default function TopBar() {
       });
   }, [profile?.id]);
 
+  //Hook #2
   // Cerrar dropdown al click afuera
   useEffect(() => {
     const handleClick = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setMenuOpen(false);
         setShowThemes(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setNotifOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClick);
@@ -82,7 +101,12 @@ export default function TopBar() {
     }
   };
 
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
+    play("logout");
+    setShowLogoutAnim(true);
+  };
+
+  const handleLogoutComplete = async () => {
     await signOut();
     navigate("/login");
   };
@@ -103,6 +127,15 @@ export default function TopBar() {
     }
     return <div className="topbar__avatar topbar__avatar--skeleton" />;
   };
+
+  if (showLogoutAnim) {
+    return (
+      <LogoutAnimation
+        userName={profile?.name?.split(" ")[0] || ""}
+        onComplete={handleLogoutComplete}
+      />
+    );
+  }
 
   return (
     <>
@@ -135,9 +168,100 @@ export default function TopBar() {
           >
             <Search size={17} strokeWidth={1.8} />
           </button>
+          {/* Campana de notificaciones  */}
+          <div className="relative" ref={notifRef}>
+            <button
+              onClick={() => setNotifOpen((v) => !v)}
+              className="topbar__icon-btn"
+              title="Notificaciones"
+            >
+              <Bell size={17} strokeWidth={1.8} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-error text-white text-[9px] font-bold flex items-center justify-center">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </button>
 
-          <button className="topbar__icon-btn" title="Notificaciones">
-            <Bell size={17} strokeWidth={1.8} />
+            {notifOpen && (
+              <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-[340px] max-h-[480px] bg-bg-surface border border-border rounded-2xl shadow-elevated overflow-hidden flex flex-col">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border-soft shrink-0">
+                  <div className="text-[13px] font-bold text-text-primary">
+                    Notificaciones
+                  </div>
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={markAllAsRead}
+                      className="text-[10.5px] text-accent-hover font-medium hover:underline"
+                    >
+                      Marcar todo leído
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex-1 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="text-center py-10 px-4">
+                      <div className="text-3xl mb-2">🔔</div>
+                      <div className="text-[12px] text-text-secondary">
+                        No tienes notificaciones
+                      </div>
+                    </div>
+                  ) : (
+                    notifications.map((n) => (
+                      <button
+                        key={n.id}
+                        onClick={() => markAsRead(n.id)}
+                        className={`w-full text-left px-4 py-3 border-b border-border-soft hover:bg-bg-alt transition-colors ${
+                          n.read_at ? "" : "bg-accent/5"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-full bg-accent/15 flex items-center justify-center shrink-0 mt-0.5">
+                            {n.type === "report_warning" && <span>⚠️</span>}
+                            {n.type === "verification" && <span>✅</span>}
+                            {n.type === "info" && <span>ℹ️</span>}
+                            {n.type === "congrats" && <span>🎉</span>}
+                            {n.type === "system" && <span>📢</span>}
+                            {n.type === "founder_reply" && <span>💬</span>}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[12.5px] font-semibold text-text-primary mb-0.5 leading-snug">
+                              {n.title}
+                            </div>
+                            <div className="text-[11.5px] text-text-secondary leading-snug line-clamp-3">
+                              {n.content}
+                            </div>
+                            <div className="text-[10px] text-text-tertiary mt-1">
+                              {new Date(n.created_at).toLocaleString("es-CO", {
+                                day: "numeric",
+                                month: "short",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </div>
+                          </div>
+                          {!n.read_at && (
+                            <span className="w-2 h-2 rounded-full bg-accent shrink-0 mt-1.5" />
+                          )}
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          <button
+            onClick={toggleMute}
+            className="topbar__icon-btn"
+            title={muted ? "Activar sonidos" : "Silenciar"}
+          >
+            {muted ? (
+              <VolumeX size={17} strokeWidth={1.8} />
+            ) : (
+              <Volume2 size={17} strokeWidth={1.8} />
+            )}
           </button>
 
           <div className="topbar__avatar-wrap" ref={menuRef}>
@@ -197,6 +321,16 @@ export default function TopBar() {
                   }}
                 >
                   <Settings size={14} /> Ajustes
+                </button>
+
+                <button
+                  className="topbar__dropdown-item"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setBugOpen(true);
+                  }}
+                >
+                  <Bug size={14} /> Reportar un problema
                 </button>
 
                 {/* Admin - solo para el founder */}
@@ -272,6 +406,9 @@ export default function TopBar() {
         open={adminModalOpen}
         onClose={() => setAdminModalOpen(false)}
       />
+
+      {/* Modal de reporte controlado desde el TopBar */}
+      <ReportBugButton open={bugOpen} onClose={() => setBugOpen(false)} />
     </>
   );
 }

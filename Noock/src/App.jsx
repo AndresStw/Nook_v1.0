@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import Landing from "./pages/Landing";
+import VerifyEmail from "./pages/VerifyEmail";
 import Search from "./pages/Search";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -25,7 +26,7 @@ export default function App() {
   return (
     <>
       <BlindChatInvite />
-      <ReportBugButton />
+
       <SupportMessageBanner />
       <Routes>
         {/* Públicas */}
@@ -35,6 +36,18 @@ export default function App() {
         <Route path="/test" element={<TestConnection />} />
 
         {/* Onboarding (requiere sesión pero NO requiere onboarding completo) */}
+        <Route
+          path="/verify-email"
+          element={
+            <ProtectedRoute
+              requireOnboarding={false}
+              requireVerification={false}
+            >
+              <VerifyEmail />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/onboarding"
           element={
@@ -56,7 +69,7 @@ export default function App() {
         <Route
           path="/feed"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requireCompleteProfile>
               <Feed />
             </ProtectedRoute>
           }
@@ -64,7 +77,7 @@ export default function App() {
         <Route
           path="/explore"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requireCompleteProfile>
               <Explore />
             </ProtectedRoute>
           }
@@ -72,7 +85,7 @@ export default function App() {
         <Route
           path="/connections"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requireCompleteProfile>
               <Connections />
             </ProtectedRoute>
           }
@@ -80,7 +93,7 @@ export default function App() {
         <Route
           path="/messages"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requireCompleteProfile>
               <Messages />
             </ProtectedRoute>
           }

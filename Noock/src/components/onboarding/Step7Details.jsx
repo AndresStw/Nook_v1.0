@@ -12,6 +12,8 @@ import {
   formatHeight,
 } from "../../lib/profileLabels";
 
+
+//Componente
 export default function Step6Details({ onNext, onBack }) {
   const { details, setDetail, toggleLanguage } = useOnboardingStore();
 

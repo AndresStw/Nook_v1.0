@@ -154,7 +154,6 @@
 }
 
 /* Posiciones */
-
 .voice-1 {
   top: 12%;
   left: 5%;
@@ -450,7 +449,7 @@
 }
 
 /* ================================
-   MÓVILES
+   MOVIL responsibidad
 ================================ */
 
 @media (max-width: 600px) {
@@ -563,4 +562,9 @@
   .nook-button {
     transition: none;
   }
+}
+.nook-landing__version {
+  opacity: 0.5;
+  font-size: 10px;
+  letter-spacing: 0.05em;
 }

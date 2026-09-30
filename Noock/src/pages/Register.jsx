@@ -7,7 +7,11 @@ import WallOfVoices from "../components/ui/WallOfVoices";
 import "../assets/Css/landing.css";
 import "../assets/Css/login.css";
 import { useOnboardingStore } from "../stores/onboardingStore";
+import { supabase } from "../lib/supabase";
+import { useSound } from "../hooks/useSound";
+import { APP_VERSION } from "../lib/version";
 
+//Componente
 export default function Register() {
   const navigate = useNavigate();
   const { signUp } = useAuth();
@@ -16,19 +20,64 @@ export default function Register() {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
   const { reset: resetOnboarding } = useOnboardingStore();
+  const { play } = useSound();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+
     try {
-      await signUp(email, password, name);
-      resetOnboarding(); // ← asegurar store limpio
+      //  Pre-check: email bloqueado
+      const { data: isBanned, error: banError } = await supabase.rpc(
+        "is_email_banned",
+        { p_email: email.trim().toLowerCase() },
+      );
+
+      if (!banError && isBanned) {
+        setError(
+          "Este email está bloqueado en Nook. Si crees que es un error, contacta al fundador.",
+        );
+        setLoading(false);
+        return;
+      }
+
+      // Registro — puede devolver session O no (si requiere confirmación)
+      const result = await signUp(email, password, name);
+      play("register");
+      resetOnboarding();
+
+      // Retraso
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      // Si Supabase requiere confirmación de email, no hay session
+      if (!result?.session) {
+        navigate("/verify-email", { replace: true });
+        return;
+      }
+
+      // Si ya tenía sesión (auto-confirm), va directo al onboarding
       navigate("/onboarding");
     } catch (err) {
-      // ...
+      console.error("Error registro:", err);
+      const msg = err?.message || "Error desconocido";
+
+      if (msg.includes("NOOK-403")) {
+        setError("Este email está bloqueado en Nook.");
+      } else if (msg.includes("NOOK-429")) {
+        setError("Demasiados registros desde tu red. Intenta más tarde.");
+      } else if (msg.includes("User already registered")) {
+        setError(
+          "Este email ya está registrado. Inicia sesión o recupera tu contraseña.",
+        );
+      } else if (msg.includes("Database error saving new user")) {
+        setError("No pudimos crear tu cuenta. Intenta con otro email.");
+      } else {
+        setError(msg);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -102,10 +151,10 @@ export default function Register() {
             {loading ? "Creando cuenta..." : "Crear cuenta"}
           </button>
         </form>
-
         <p className="nook-auth__footer">
           ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>
         </p>
+        <p className="nook-auth__version">{APP_VERSION}</p>
       </div>
     </main>
   );

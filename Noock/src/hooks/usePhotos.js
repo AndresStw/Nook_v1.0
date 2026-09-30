@@ -215,9 +215,24 @@ export function usePhotos(userId) {
     await refreshLimits();
   };
 
+  //  Actualizar el punto focal de una foto
+  const updatePhotoFocal = async (position, focalPoint) => {
+    if (!userId) throw new Error("No user id");
+
+    const { error } = await supabase
+      .from("photos")
+      .update({ focal_point: focalPoint })
+      .eq("user_id", userId)
+      .eq("position", position);
+
+    if (error) throw error;
+    return true;
+  };
+
   return {
     uploadPhoto,
     deletePhoto,
+    updatePhotoFocal,
     uploadVideo,
     deleteVideo,
     uploading,

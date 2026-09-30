@@ -1,8 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
 
 export function useConnections() {
   const [groups, setGroups] = useState({ new: [], active: [], archived: [] });
+  const channelIdRef = useRef(
+    `conn-${Math.random().toString(36).slice(2, 10)}-${Date.now()}`,
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -31,7 +34,8 @@ export function useConnections() {
 
     // Realtime: actualizar cuando haya nuevo match o mensaje
     const channel = supabase
-      .channel("connections-updates")
+      .channel(channelIdRef.current)
+
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "matches" },

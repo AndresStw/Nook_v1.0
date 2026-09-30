@@ -1,5 +1,6 @@
 import { Plane, Music, Film } from "lucide-react";
 
+//Componente  No se esta usando se reemplazo
 export default function ConnectionCard({
   match,
   onSendMessage,

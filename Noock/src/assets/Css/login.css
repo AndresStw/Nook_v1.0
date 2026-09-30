@@ -230,7 +230,7 @@
 }
 
 /* ================================
-   BOTÓN VOLVER (opcional)
+   BOTÓN VOLVER 
 ================================ */
 
 .nook-auth__back {
@@ -295,4 +295,27 @@
   .nook-auth__field input {
     transition: none;
   }
+}
+
+/* ================================
+   VERSIÓN (Beta 1.0)
+================================ */
+.nook-auth__version {
+  margin: 20px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--nook-border);
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nook-ink-soft);
+  opacity: 0.55;
+}
+
+/* Al hacer hover se ilumina un poco (guiño) */
+.nook-auth__version:hover {
+  opacity: 1;
+  color: var(--nook-mint-dark);
+  transition: all 200ms ease;
 }

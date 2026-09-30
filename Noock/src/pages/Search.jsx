@@ -130,6 +130,11 @@ function SearchResultCard({ user }) {
             src={user.main_photo}
             alt={user.name}
             className="w-14 h-14 rounded-full object-cover"
+            style={{
+              objectPosition: user.main_photo_focal
+                ? `${user.main_photo_focal.x}% ${user.main_photo_focal.y}%`
+                : "50% 50%",
+            }}
           />
         ) : (
           <div className="w-14 h-14 rounded-full bg-bg-alt flex items-center justify-center text-text-tertiary text-[16px]">

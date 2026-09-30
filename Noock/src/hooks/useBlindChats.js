@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabase";
 
 export function useBlindChats() {
   const [blindChats, setBlindChats] = useState([]);
+  const channelIdRef = useRef(
+    `blind-list-${Math.random().toString(36).slice(2, 10)}-${Date.now()}`,
+  );
   const [loading, setLoading] = useState(true);
 
   const fetchBlindChats = async () => {
@@ -19,8 +22,8 @@ export function useBlindChats() {
   useEffect(() => {
     fetchBlindChats();
 
-    const channel = supabase
-      .channel("blind-chats-updates")
+     const channel = supabase
+      .channel(channelIdRef.current)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "blind_chats" },

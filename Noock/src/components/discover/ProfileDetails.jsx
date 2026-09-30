@@ -1,18 +1,23 @@
-import { useState } from "react";
-import { MapPin, Sparkles, Heart, ChevronDown, ChevronUp } from "lucide-react";
+import { MapPin, Sparkles, Heart } from "lucide-react";
 import Badges from "./Badges";
 import ProfileAttributes from "./ProfileAttributes";
 import PiBadge from "../ui/PiBadge";
+import { GENDER_INTERNAL } from "../../lib/profileLabels";
 
+//Componente
 export default function ProfileDetails({ profile }) {
-  const [expanded, setExpanded] = useState(false);
-
   if (!profile) return null;
 
   const isFounder = profile.role === "founder";
   const hearts = profile.hearts ?? 3;
   const answers = profile.answers || [];
   const interests = profile.interests || [];
+
+  // Obtener etiqueta de género legible
+  const genderKey = profile.gender_internal || profile.gender;
+  const genderLabel =
+    GENDER_INTERNAL[genderKey] ||
+    (genderKey && genderKey !== "prefiero_no_decir" ? genderKey : null);
 
   return (
     <div
@@ -32,17 +37,29 @@ export default function ProfileDetails({ profile }) {
         </h2>
 
         {profile.tagline && (
-          <p className="text-[12px] text-text-secondary italic mb-2">
+          <p className="text-[12px] text-text-secondary italic mb-2 line-clamp-2">
             "{profile.tagline}"
           </p>
         )}
+
         <div className="flex items-center gap-2 mt-2">
           <PiBadge pi={profile.pi || 0} size="sm" />
         </div>
 
-        <div className="flex items-center gap-1 text-[11px] text-text-tertiary">
-          <MapPin size={11} />
-          <span>{profile.city || "Sin ciudad"}</span>
+        <div className="flex items-center gap-2 text-[11px] text-text-tertiary mt-2 flex-wrap">
+          <div className="flex items-center gap-1">
+            <MapPin size={11} />
+            <span>{profile.city || "Sin ciudad"}</span>
+          </div>
+
+          {genderLabel && (
+            <>
+              <span>·</span>
+              <span className="font-medium text-text-secondary bg-bg-alt border border-border-soft px-2 py-0.5 rounded-full text-[10.5px]">
+                {genderLabel}
+              </span>
+            </>
+          )}
         </div>
       </div>
 
@@ -72,76 +89,66 @@ export default function ProfileDetails({ profile }) {
 
       {/* Contenido con scroll */}
       <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-5">
+        {/* Biografía en cajita contenida */}
         {profile.bio && (
-          <p className="text-[12.5px] text-text-primary leading-relaxed">
-            {profile.bio}
-          </p>
+          <div>
+            <div className="text-[10px] text-text-tertiary uppercase tracking-wider mb-2 font-semibold">
+              Sobre mí
+            </div>
+            <div className="bg-bg-alt rounded-2xl p-4 border border-border-soft shadow-xs">
+              <p className="text-[12.5px] text-text-primary leading-relaxed break-words whitespace-pre-wrap">
+                {profile.bio}
+              </p>
+            </div>
+          </div>
         )}
 
-        {!expanded && (answers.length > 0 || interests.length > 0) && (
-          <button
-            onClick={() => setExpanded(true)}
-            className="w-full flex items-center justify-center gap-1.5 py-2.5 border border-border rounded-xl text-[12px] font-medium text-text-secondary hover:bg-bg-alt hover:text-text-primary transition-colors"
-          >
-            Descubrir más
-            <ChevronDown size={14} />
-          </button>
+        {/* Las 3 preguntas y respuestas */}
+        {answers.length > 0 && (
+          <div>
+            <div className="text-[10px] text-text-tertiary uppercase tracking-wider mb-2.5 flex items-center gap-1 font-semibold">
+              <Sparkles size={11} className="text-accent" />
+              Sus respuestas ({answers.length})
+            </div>
+            <div className="space-y-2.5">
+              {answers.map((a, i) => (
+                <div
+                  key={i}
+                  className="bg-bg-alt rounded-2xl p-3.5 border border-border-soft space-y-1 shadow-xs"
+                >
+                  <div className="text-[11px] font-semibold text-text-secondary leading-snug">
+                    {a.question}
+                  </div>
+                  <div className="text-[13px] text-text-primary leading-relaxed break-words italic">
+                    "{a.answer}"
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
-        {expanded && (
-          <>
-            <ProfileAttributes profile={profile} />
-            {answers.length > 0 && (
-              <div>
-                <div className="text-[10px] text-text-tertiary uppercase tracking-wider mb-2 flex items-center gap-1">
-                  <Sparkles size={10} className="text-accent" />
-                  Sus respuestas
-                </div>
-                <div className="space-y-3">
-                  {answers.map((a, i) => (
-                    <div
-                      key={i}
-                      className="bg-bg-alt rounded-xl p-3 border border-border-soft"
-                    >
-                      <div className="text-[10px] text-text-tertiary italic mb-1 leading-snug">
-                        {a.question}
-                      </div>
-                      <div className="text-[12.5px] text-text-primary leading-relaxed">
-                        {a.answer}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {interests.length > 0 && (
-              <div>
-                <div className="text-[10px] text-text-tertiary uppercase tracking-wider mb-2">
-                  Intereses
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {interests.map((i, idx) => (
-                    <span
-                      key={idx}
-                      className="text-[11px] px-2.5 py-1 bg-bg-alt border border-border rounded-full text-text-secondary"
-                    >
-                      {i.emoji} {i.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <button
-              onClick={() => setExpanded(false)}
-              className="w-full flex items-center justify-center gap-1.5 py-2 text-[11px] text-text-tertiary hover:text-text-primary transition-colors"
-            >
-              Ver menos
-              <ChevronUp size={13} />
-            </button>
-          </>
+        {/* Intereses */}
+        {interests.length > 0 && (
+          <div>
+            <div className="text-[10px] text-text-tertiary uppercase tracking-wider mb-2 font-semibold">
+              Intereses
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {interests.map((i, idx) => (
+                <span
+                  key={idx}
+                  className="text-[11px] px-2.5 py-1 bg-bg-alt border border-border rounded-full text-text-secondary"
+                >
+                  {i.emoji} {i.name}
+                </span>
+              ))}
+            </div>
+          </div>
         )}
+
+        {/* Atributos / Detalles (Género, Altura, Signo, etc.) */}
+        <ProfileAttributes profile={profile} />
       </div>
     </div>
   );

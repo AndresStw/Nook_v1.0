@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import Logo from "../components/ui/Logo";
 import WallOfVoices from "../components/ui/WallOfVoices";
 import "../assets/Css/landing.css";
+import { APP_VERSION } from "../lib/version";
 
 export default function Landing() {
   return (
@@ -47,6 +48,7 @@ export default function Landing() {
           <Logo size={23} />
         </span>
         <span>Conexiones reales. Personas reales.</span>
+        <span className="nook-landing__version">· {APP_VERSION}</span>
       </div>
     </main>
   );

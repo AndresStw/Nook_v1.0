@@ -52,7 +52,7 @@ export const useOnboardingStore = create((set, get) => ({
   setSafetyRead: (value) => set({ safetyRead: value }),
   setBasic: (key, value) =>
     set((s) => ({ basic: { ...s.basic, [key]: value } })),
-  nextStep: () => set((s) => ({ step: Math.min(s.step + 1, 10) })),
+  nextStep: () => set((s) => ({ step: Math.min(s.step + 1, 7) })),
   prevStep: () => set((s) => ({ step: Math.max(s.step - 1, 1) })),
 
   ///Metodos

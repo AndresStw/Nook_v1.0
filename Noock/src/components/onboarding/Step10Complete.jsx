@@ -5,6 +5,7 @@ import OnboardingLayout from "./OnboardingLayout";
 import { useOnboardingStore } from "../../stores/onboardingStore";
 import { useAuth } from "../../hooks/useAuth";
 import { supabase } from "../../lib/supabase";
+import { soundManager } from "../../lib/sounds";
 
 export default function Step7Complete({ onBack }) {
   const navigate = useNavigate();
@@ -19,21 +20,7 @@ export default function Step7Complete({ onBack }) {
     setError(null);
 
     try {
-      // 1. Guardar respuestas
-      const answersPayload = store.selectedQuestionIds.map((qid) => ({
-        user_id: user.id,
-        question_id: qid,
-        answer: store.answers[qid],
-      }));
-
-      if (answersPayload.length > 0) {
-        const { error: aErr } = await supabase
-          .from("user_answers")
-          .upsert(answersPayload, { onConflict: "user_id,question_id" });
-        if (aErr) throw aErr;
-      }
-
-      // 2. Guardar intereses
+      // 1. Guardar intereses (lo único que queda del onboarding)
       const interestsPayload = store.selectedInterestIds.map((iid) => ({
         user_id: user.id,
         interest_id: iid,
@@ -46,31 +33,28 @@ export default function Step7Complete({ onBack }) {
         if (iErr) throw iErr;
       }
 
-      // 3. Marcar onboarding como completado + guardar detalles
+      // 2. Marcar onboarding como completado
       const { error: uErr } = await supabase
         .from("users")
         .update({
           onboarding_completed: true,
           verified: true,
           last_active_at: new Date().toISOString(),
-          // Detalles del perfil
-          sexual_orientation: store.details.sexual_orientation,
-          marital_status: store.details.marital_status,
-          has_kids: store.details.has_kids,
-          personality: store.details.personality,
-          smokes: store.details.smokes,
-          drinks: store.details.drinks,
-          religion: store.details.religion,
-          height_cm: store.details.height_cm,
-          languages: store.details.languages || [],
         })
         .eq("id", user.id);
 
-      // 4. Refrescar perfil y resetear store
+      if (uErr) throw uErr;
+
+      // 3. Refrescar perfil y resetear store
       await refetchProfile();
       store.reset();
-      // Reload completo para asegurar que TODOS los useAuth obtengan perfil fresco
-      window.location.href = "/feed";
+
+      // 4. Reproducir sonido de éxito antes de redirigir
+      soundManager.play("success");
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      // 5. Redirigir a Mi Perfil con flag para mostrar banner
+      window.location.href = "/me?fromOnboarding=1";
     } catch (err) {
       console.error("🚨 NOOK-502: Error completando onboarding", err);
       setError(err.message);
@@ -80,14 +64,14 @@ export default function Step7Complete({ onBack }) {
 
   return (
     <OnboardingLayout
-      step={10}
+      step={7}
       title="Todo listo 🎉"
       subtitle="Ya eres parte de Nook. Un lugar donde se conecta de verdad."
       onBack={onBack}
       onNext={handleComplete}
       canContinue={true}
       loading={saving}
-      nextLabel="Entrar a Nook"
+      nextLabel="Completar mi perfil"
     >
       <div className="space-y-3">
         <div className="flex justify-center mb-4">

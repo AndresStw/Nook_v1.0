@@ -3,11 +3,13 @@ import OnboardingLayout from "./OnboardingLayout";
 import { useOnboardingStore } from "../../stores/onboardingStore";
 import { supabase } from "../../lib/supabase";
 
+//Componente
 export default function Step5Interests({ onNext, onBack }) {
   const { selectedInterestIds, toggleInterest } = useOnboardingStore();
   const [interests, setInterests] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  //Hook #1
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase
@@ -20,17 +22,17 @@ export default function Step5Interests({ onNext, onBack }) {
     load();
   }, []);
 
-  const canContinue = selectedInterestIds.length >= 3;
+  const canContinue = selectedInterestIds.length >= 1;
   const count = selectedInterestIds.length;
 
   return (
     <OnboardingLayout
-      step={6}
+      step={4}
       title="¿Qué te mueve?"
       subtitle={
         canContinue
-          ? `${count} seleccionados`
-          : `Elige al menos 3 · ${count} seleccionados`
+          ? `${count} seleccionado${count === 1 ? "" : "s"}`
+          : `Elige al menos 1 · ${count} seleccionado${count === 1 ? "" : "s"}`
       }
       onBack={onBack}
       onNext={onNext}

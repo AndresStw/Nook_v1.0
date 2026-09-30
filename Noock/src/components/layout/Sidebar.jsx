@@ -1,14 +1,19 @@
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Home, Search, Heart, MessageCircle, User, LogOut } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
+import { useSound } from "../../hooks/useSound";
 import { useUnreadCount } from "../../hooks/useUnreadCount";
 import Logo from "../ui/Logo";
+import LogoutAnimation from "../auth/LogoutAnimation";
 
+//Componente
 export default function Sidebar() {
-  const { signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const unreadCount = useUnreadCount();
-
+  const { play } = useSound();
+  const [showLogoutAnim, setShowLogoutAnim] = useState(false);
   const navItems = [
     { to: "/feed", icon: Home, label: "Inicio" },
     { to: "/explore", icon: Search, label: "Explorar" },
@@ -22,10 +27,24 @@ export default function Sidebar() {
     { to: "/me", icon: User, label: "Perfil" },
   ];
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
+    play("logout");
+    setShowLogoutAnim(true);
+  };
+
+  const handleLogoutComplete = async () => {
     await signOut();
     navigate("/login");
   };
+
+  if (showLogoutAnim) {
+    return (
+      <LogoutAnimation
+        userName={profile?.name?.split(" ")[0] || ""}
+        onComplete={handleLogoutComplete}
+      />
+    );
+  }
 
   return (
     <aside className="w-[200px] shrink-0 bg-bg-surface border-r border-border flex flex-col justify-between p-4 h-screen">
@@ -81,7 +100,7 @@ export default function Sidebar() {
         <div className="pt-3 border-t border-border-soft">
           <div className="flex items-center justify-between">
             <div className="text-accent">
-              <Logo size={16} />
+              <Logo size={17} />
             </div>
             <div className="text-[8px] leading-tight text-text-tertiary text-right">
               <div>Conexiones reales.</div>

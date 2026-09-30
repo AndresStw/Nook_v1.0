@@ -1,9 +1,26 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { useProfileCompletion } from "../../hooks/useProfileCompletion";
+import { hasActiveEscape } from "../../lib/profileCompletion";
 
-export default function ProtectedRoute({ children, requireOnboarding = true }) {
+//Componente
+export default function ProtectedRoute({
+  children,
+  requireOnboarding = true,
+  requireVerification = true,
+  requireCompleteProfile = false, //  Bloquea si < 75% (con escape de 24h)
+}) {
   const { user, profile, loading } = useAuth();
+  const location = useLocation();
 
+  // Solo cargar completitud cuando se necesita
+  const { isComplete, loading: completionLoading } = useProfileCompletion(
+    user?.id,
+    profile?.onboarding_completed,
+    profile?.role === "founder",
+  );
+
+  // 1. Cargando auth
   if (loading) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
@@ -12,12 +29,21 @@ export default function ProtectedRoute({ children, requireOnboarding = true }) {
     );
   }
 
-  // Sin sesión → login
+  // 2. Sin sesión → login
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  // Sesión pero sin perfil → algo falló en el trigger
+  // 3. Email no verificado → verify-email
+  if (
+    requireVerification &&
+    !user.email_confirmed_at &&
+    location.pathname !== "/verify-email"
+  ) {
+    return <Navigate to="/verify-email" replace />;
+  }
+
+  // 4. Sin perfil (trigger falló)
   if (!profile) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center p-6">
@@ -33,9 +59,35 @@ export default function ProtectedRoute({ children, requireOnboarding = true }) {
     );
   }
 
-  // Sesión con perfil pero sin onboarding → onboarding
+  // 5. Sin onboarding → onboarding
   if (requireOnboarding && !profile.onboarding_completed) {
     return <Navigate to="/onboarding" replace />;
+  }
+
+  // 6. Perfil incompleto (< 75%)  bloquear con escape
+  if (
+    requireCompleteProfile &&
+    profile.onboarding_completed &&
+    profile.role !== "founder" && // founder nunca se bloquea
+    completionLoading
+  ) {
+    // Mostrar spinner mientras calcula (evita flash de contenido)
+    return (
+      <div className="min-h-screen bg-bg flex items-center justify-center">
+        <div className="text-text-secondary text-[13px]">Cargando...</div>
+      </div>
+    );
+  }
+
+  if (
+    requireCompleteProfile &&
+    profile.onboarding_completed &&
+    profile.role !== "founder" &&
+    !isComplete &&
+    !hasActiveEscape() &&
+    location.pathname !== "/me"
+  ) {
+    return <Navigate to="/me?blocked=1" replace />;
   }
 
   return children;

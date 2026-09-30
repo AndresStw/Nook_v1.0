@@ -6,6 +6,8 @@ import "../../assets/Css/landing.css";
 import "../../assets/Css/login.css";
 import "../../assets/Css/onboarding.css";
 
+
+//Componente
 export default function OnboardingLayout({
   step,
   title,

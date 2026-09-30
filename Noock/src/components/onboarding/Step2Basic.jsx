@@ -10,12 +10,14 @@ import { GENDER_INTERNAL, SHOW_ME_OPTIONS } from "../../lib/profileLabels";
 import "../../assets/Css/landing.css";
 import "../../assets/Css/login.css";
 
+//Componente
 export default function Step2Basic({ onNext, onBack }) {
   const { user } = useAuth();
   const { basic, setBasic } = useOnboardingStore();
   const [errors, setErrors] = useState({});
   const [showAgeBlock, setShowAgeBlock] = useState(false);
 
+  //Hook #1
   useEffect(() => {
     if (!basic.name && user?.user_metadata?.name) {
       setBasic("name", user.user_metadata.name);
@@ -97,7 +99,7 @@ export default function Step2Basic({ onNext, onBack }) {
     onNext();
   };
 
-  // Bloqueo por menor de edad (idéntico al tuyo)
+  // Bloqueo por menor de edad 
   if (showAgeBlock) {
     return (
       <main className="nook-auth nook-auth--onboarding">
@@ -117,7 +119,7 @@ export default function Step2Basic({ onNext, onBack }) {
             </p>
             <div className="p-3 bg-error/5 border border-error/20 rounded-xl mb-5">
               <p className="text-[11.5px] text-text-secondary leading-relaxed">
-                Si crees que es un error, escríbele al fundador con el botón 🐛
+                Si crees que es un error, contacta con Soporte con el botón 🐛
                 cuando cumplas la mayoría de edad.
               </p>
             </div>

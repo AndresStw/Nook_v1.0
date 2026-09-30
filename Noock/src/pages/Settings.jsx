@@ -4,10 +4,12 @@ import AppLayout from "../components/layout/AppLayout";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabase";
 
+//Componente
 export default function Settings() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
+///Restablecer contrasena
   const handlePasswordReset = async () => {
     const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
       redirectTo: `${window.location.origin}/settings`,
@@ -16,23 +18,49 @@ export default function Settings() {
     else alert("Te enviamos un correo para cambiar tu contraseña.");
   };
 
+//Eliminar cuenta totalemente
   const handleDeleteAccount = async () => {
     const confirmed = confirm(
-      "¿Eliminar tu cuenta? Esta acción no se puede deshacer.",
+      "¿Eliminar tu cuenta? Esta acción es PERMANENTE y no se puede deshacer.\n\n" +
+        "Se borrarán tu perfil, fotos, mensajes y todo tu historial. " +
+        "Si quieres volver, tendrás que registrarte de nuevo desde cero.",
     );
     if (!confirmed) return;
 
-    // Nota: eliminar auth.users requiere una Edge Function con service_role.
-    // Por ahora solo marcamos el perfil como eliminado.
-    const { error } = await supabase
-      .from("users")
-      .update({ banned: true })
-      .eq("id", user.id);
+    // Segunda confirmación para evitar accidentes
+    const finalConfirm = confirm("¿Estás completamente seguro?");
+    if (!finalConfirm) return;
 
-    if (error) alert("Error: " + error.message);
-    else {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) {
+        alert("No hay sesión activa");
+        return;
+      }
+
+      // Llamar a la Edge Function
+      const { data, error } = await supabase.functions.invoke(
+        "delete-account",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (error || data?.error) {
+        alert("Error: " + (error?.message || data.error));
+        return;
+      }
+
+      // Éxito  cerrar sesión y volver al landing
       await signOut();
+      alert(
+        "Tu cuenta fue eliminada. Gracias por haber sido parte de Nook. 💚",
+      );
       navigate("/");
+    } catch (err) {
+      console.error("Error inesperado:", err);
+      alert("Algo salió mal. Contacta con soporte con el botón 🐛.");
     }
   };
 

@@ -3,11 +3,14 @@ import OnboardingLayout from "./OnboardingLayout";
 import { useOnboardingStore } from "../../stores/onboardingStore";
 import { supabase } from "../../lib/supabase";
 
+//Componente
 export default function Step4Answers({ onNext, onBack }) {
   const { selectedQuestionIds, answers, setAnswer } = useOnboardingStore();
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
 
+
+  //Hook #1
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase
