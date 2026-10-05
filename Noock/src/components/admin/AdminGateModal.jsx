@@ -20,7 +20,7 @@ export default function AdminGateModal({ open, onClose }) {
     setError(null);
 
     const { data, error: rpcError } = await supabase.rpc(
-      "verify_admin_password",
+      "verify_admin_password", //Funcion DB Confirmada
       { p_password: password },
     );
 
@@ -47,7 +47,7 @@ export default function AdminGateModal({ open, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[250] bg-black/70 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4"
+      className="fixed inset-0 z-250 bg-black/70 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4"
       onClick={handleClose}
     >
       <div

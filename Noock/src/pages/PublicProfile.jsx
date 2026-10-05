@@ -19,6 +19,7 @@ import Badges from "../components/discover/Badges";
 import ProfileAttributes from "../components/discover/ProfileAttributes";
 import { supabase } from "../lib/supabase";
 import "../assets/Css/myprofile.css";
+import { usePhotoVisibility } from "../hooks/usePhotoVisibility";
 
 export default function PublicProfile() {
   const { userId } = useParams();
@@ -28,6 +29,7 @@ export default function PublicProfile() {
   const [error, setError] = useState(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const { shouldBlur } = usePhotoVisibility(userId);
 
   useEffect(() => {
     let isMounted = true;
@@ -111,74 +113,48 @@ export default function PublicProfile() {
           {/* Hero card */}
           <div className="bg-bg-surface border border-border rounded-3xl overflow-hidden shadow-soft mb-4">
             {/* Cover (foto principal con overlay) */}
+            {/* Cover (foto principal con overlay) */}
             <div className="relative h-72 bg-bg-alt">
               {mainPhoto ? (
-                <img
-                  src={mainPhoto}
-                  alt={profile.name}
-                  className="w-full h-full object-cover"
-                  style={{
-                    objectPosition: photos[0]?.focal_point
-                      ? `${photos[0].focal_point.x}% ${photos[0].focal_point.y}%`
-                      : "50% 50%",
-                  }}
-                />
+                <>
+                  <img
+                    src={mainPhoto}
+                    alt={shouldBlur ? "Foto oculta" : profile.name}
+                    className={`w-full h-full object-cover transition-[filter] duration-500 ${
+                      shouldBlur ? "scale-110" : ""
+                    }`}
+                    style={{
+                      objectPosition: photos[0]?.focal_point
+                        ? `${photos[0].focal_point.x}% ${photos[0].focal_point.y}%`
+                        : "50% 50%",
+                      filter: shouldBlur ? "blur(28px)" : "none",
+                      WebkitFilter: shouldBlur ? "blur(28px)" : "none",
+                    }}
+                  />
+
+                  {/* Overlay candado cuando blur */}
+                  {shouldBlur && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="flex flex-col items-center gap-3 px-7 py-6 rounded-2xl bg-black/55 backdrop-blur-md border border-white/15 shadow-2xl max-w-70 text-center">
+                        <div className="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center">
+                          <Lock size={20} className="text-white" />
+                        </div>
+                        <div className="text-white text-[13px] font-bold leading-tight">
+                          Fotos ocultas
+                        </div>
+                        <div className="text-white/80 text-[11px] leading-snug">
+                          Se revelan cuando ambos se eligen.
+                          <br />
+                          Mientras tanto, conócelo por lo que dice.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-text-tertiary text-[40px]">
                   {profile.name?.[0] || "?"}
                 </div>
-              )}
-
-              <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/60 to-transparent" />
-
-              {/* Info overlay */}
-              <div className="absolute inset-x-0 bottom-0 p-6 text-white">
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <h1 className="text-3xl font-bold leading-tight drop-shadow-lg">
-                    {profile.name}
-                    {profile.age ? `, ${profile.age}` : ""}
-                  </h1>
-                  {profile.verified && (
-                    <CheckCircle2
-                      size={22}
-                      className="text-accent fill-accent/30 shrink-0"
-                    />
-                  )}
-                  {isFounder && (
-                    <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-amber-100 text-amber-700">
-                      👑 Fundador
-                    </span>
-                  )}
-                  {profile.vip_level && (
-                    <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-amber-100 text-amber-700">
-                      VIP
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-4 mb-3">
-                  <div className="flex items-center gap-1 text-[12px] text-white/90">
-                    <MapPin size={13} />
-                    {profile.city || "Sin ciudad"}
-                  </div>
-                  <PiBadge pi={profile.pi || 0} size="sm" variant="overlay" />
-                </div>
-
-                {profile.tagline && (
-                  <p className="text-[13px] italic text-white/95 max-w-2xl line-clamp-1">
-                    "{profile.tagline}"
-                  </p>
-                )}
-              </div>
-
-              {/* Actions */}
-              {!profile.is_self && (
-                <button
-                  onClick={() => navigate("/feed")}
-                  className="absolute top-4 right-4 px-4 py-2 rounded-full bg-white/95 backdrop-blur-sm text-text-primary text-[12px] font-semibold hover:bg-white transition-colors"
-                >
-                  Ver en el feed
-                </button>
               )}
             </div>
 
@@ -228,8 +204,8 @@ export default function PublicProfile() {
                   </div>
                 )}
 
-                {/* Video */}
-                {profile.video_url && (
+                {/* Video — solo con match */}
+                {profile.video_url && !shouldBlur && (
                   <div>
                     <h2 className="text-[11px] font-bold text-text-tertiary uppercase tracking-wider mb-2">
                       Video de presentación
@@ -240,6 +216,21 @@ export default function PublicProfile() {
                       playsInline
                       className="w-full max-w-md rounded-xl aspect-video bg-black"
                     />
+                  </div>
+                )}
+
+                {/* Video oculto — mensaje alternativo */}
+                {profile.video_url && shouldBlur && (
+                  <div>
+                    <h2 className="text-[11px] font-bold text-text-tertiary uppercase tracking-wider mb-2">
+                      Video de presentación
+                    </h2>
+                    <div className="w-full max-w-md aspect-video rounded-xl bg-bg-alt border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 text-text-tertiary">
+                      <Lock size={22} />
+                      <p className="text-[11.5px] font-semibold">
+                        Se revela cuando ambos se eligen
+                      </p>
+                    </div>
                   </div>
                 )}
 
@@ -299,33 +290,58 @@ export default function PublicProfile() {
               <h2 className="text-[14px] font-bold text-text-primary mb-4 flex items-center gap-2">
                 <Camera size={15} />
                 Fotos
+                {shouldBlur && (
+                  <span className="ml-auto text-[10px] font-medium text-text-tertiary flex items-center gap-1">
+                    <Lock size={10} />
+                    Se revelan con match
+                  </span>
+                )}
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {photos.map((photo, i) => (
                   <button
                     key={i}
                     onClick={() => {
+                      if (shouldBlur) return;
                       setLightboxIndex(i);
                       setLightboxOpen(true);
                     }}
-                    className="relative aspect-square rounded-xl overflow-hidden group"
+                    disabled={shouldBlur}
+                    className={`relative aspect-square rounded-xl overflow-hidden group ${
+                      shouldBlur ? "cursor-not-allowed" : ""
+                    }`}
                   >
                     <img
                       src={photo.url}
                       alt={`Foto ${i + 1}`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className={`w-full h-full object-cover transition-all duration-500 ${
+                        shouldBlur ? "scale-110" : "group-hover:scale-105"
+                      }`}
                       style={{
                         objectPosition: photo.focal_point
                           ? `${photo.focal_point.x}% ${photo.focal_point.y}%`
                           : "50% 50%",
+                        filter: shouldBlur ? "blur(20px)" : "none",
+                        WebkitFilter: shouldBlur ? "blur(20px)" : "none",
                       }}
                     />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                      <Maximize2
-                        size={22}
-                        className="text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                      />
-                    </div>
+
+                    {shouldBlur && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                        <div className="w-8 h-8 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center border border-white/20">
+                          <Lock size={13} className="text-white" />
+                        </div>
+                      </div>
+                    )}
+
+                    {!shouldBlur && (
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                        <Maximize2
+                          size={22}
+                          className="text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        />
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>
@@ -335,9 +351,9 @@ export default function PublicProfile() {
       </div>
 
       {/* Lightbox */}
-      {lightboxOpen && photos.length > 0 && (
+      {lightboxOpen && photos.length > 0 && !shouldBlur && (
         <div
-          className="fixed inset-0 z-[300] bg-black/95 flex items-center justify-center p-4"
+          className="fixed inset-0 z-300 bg-black/95 flex items-center justify-center p-4"
           onClick={() => setLightboxOpen(false)}
         >
           <button

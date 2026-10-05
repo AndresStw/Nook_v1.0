@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { Home, Search, Heart, MessageCircle, User, LogOut } from "lucide-react";
+//prettier-ignore
+import { Home, Search, Heart, MessageCircle, User, LogOut, PartyPopper } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useSound } from "../../hooks/useSound";
 import { useUnreadCount } from "../../hooks/useUnreadCount";
@@ -18,13 +19,10 @@ export default function Sidebar() {
     { to: "/feed", icon: Home, label: "Inicio" },
     { to: "/explore", icon: Search, label: "Explorar" },
     { to: "/connections", icon: Heart, label: "Conexiones" },
-    {
-      to: "/messages",
-      icon: MessageCircle,
-      label: "Mensajes",
-      badge: unreadCount,
-    },
+    //prettier-ignore
+    { to: "/messages", icon: MessageCircle, label: "Mensajes", badge: unreadCount, },
     { to: "/me", icon: User, label: "Perfil" },
+    { to: "/events", icon: PartyPopper, label: "Eventos" },
   ];
 
   const handleLogout = () => {
@@ -47,7 +45,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-[200px] shrink-0 bg-bg-surface border-r border-border flex flex-col justify-between p-4 h-screen">
+    <aside className="w-50 shrink-0 bg-bg-surface border-r border-border flex flex-col justify-between p-4 h-screen">
       <div>
         <div className="mb-6 text-accent">
           <Logo size={28} />
@@ -71,7 +69,7 @@ export default function Sidebar() {
                   <Icon size={17} strokeWidth={1.8} />
                   <span className="flex-1">{label}</span>
                   {badge > 0 && (
-                    <span className="min-w-[18px] h-[18px] rounded-full bg-accent text-bg text-[10px] flex items-center justify-center font-semibold px-1">
+                    <span className="min-w-4.5 h-4.5 rounded-full bg-accent text-bg text-[10px] flex items-center justify-center font-semibold px-1">
                       {badge > 99 ? "99+" : badge}
                     </span>
                   )}

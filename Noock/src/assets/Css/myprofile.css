@@ -302,7 +302,8 @@
     position: relative;
     height: 100%;
     overflow-y: auto;
-    overflow-x: hidden; /*bloquea deslizamiento lateral */
+    overflow-x: hidden;
+    /*bloquea deslizamiento lateral */
     padding: 8px 8px 60px;
     max-width: 100vw;
 }
@@ -513,8 +514,10 @@
         scroll-snap-type: x proximity;
         gap: 4px;
         padding: 6px;
-        max-width: 100%; /*  no crece más que el padre */
-        min-width: 0; /* */
+        max-width: 100%;
+        /*  no crece más que el padre */
+        min-width: 0;
+        /* */
     }
 
     .profile-editor__tabs::-webkit-scrollbar {
@@ -528,7 +531,7 @@
         scroll-snap-align: start;
     }
 
-    .profile-editor__tab > svg {
+    .profile-editor__tab>svg {
         flex-shrink: 0;
     }
 
@@ -754,7 +757,8 @@
     border-radius: 14px;
     overflow: hidden;
     background: var(--color-bg-alt);
-    min-width: 0; /* importante para grid */
+    min-width: 0;
+    /* importante para grid */
 }
 
 @media (max-width: 640px) {
@@ -778,12 +782,13 @@
     object-fit: cover;
 }
 
+/* Botón de eliminar */
 .profile-photo__delete {
     position: absolute;
     top: 8px;
     right: 8px;
-    width: 26px;
-    height: 26px;
+    width: 15px;
+    height: 15px;
     border-radius: 50%;
     border: none;
     background: rgba(0, 0, 0, 0.6);
@@ -792,7 +797,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    opacity: 0;
+    opacity: 1;
     transition: all 180ms ease;
 }
 
@@ -1413,7 +1418,7 @@
     border: none;
     background: var(--color-ink);
     color: #F8F7F1;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -1763,17 +1768,17 @@
     position: absolute;
     top: 8px;
     left: 8px;
-    width: 26px;
-    height: 26px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     border: none;
     background: rgba(0, 0, 0, 0.6);
-    color: white;
+    color: rgb(255, 255, 255);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    opacity: 0;
+    opacity: 1;
     transition: all 180ms ease;
     z-index: 2;
 }
@@ -1786,16 +1791,33 @@
     background: var(--color-accent);
     color: var(--color-on-accent);
 }
-@media (max-width: 768px) {
-  /* Feedback al tocar botones en móvil */
-  button:active,
-  a:active {
-    transform: scale(0.98);
-    transition: transform 100ms ease;
-  }
 
-  /* Botones "fijos" que no deben moverse */
-  .no-press:active {
-    transform: none;
-  }
+@media (max-width: 768px) {
+
+    /* Feedback al tocar botones en móvil */
+    button:active,
+    a:active {
+        transform: scale(0.98);
+        transition: transform 100ms ease;
+    }
+
+    /* Botones "fijos" que no deben moverse */
+    .no-press:active {
+        transform: none;
+    }
+}
+
+/* Textarea sin icono a la izquierda (para respuestas de preguntas) */
+.profile-field__textarea--plain {
+    padding: 12px 14px;
+    min-height: 70px;
+}
+
+/* Mostrar iconos de acción siempre en dispositivos sin hover (móvil/tablet) */
+@media (hover: none) {
+
+    .profile-photo__adjust,
+    .profile-photo__delete {
+        opacity: 1;
+    }
 }

@@ -75,16 +75,33 @@ export default function BlindChatView() {
 
     if (error) {
       console.error("🚨 NOOK-502: Error abandonando chat", error);
+      // Incluso si falla, sacamos al usuario para no dejarlo atrapado
+      navigate("/feed");
       return;
     }
 
-    // Si fue reporte, ir al feed
-    if (reason === "left_rude" || reason === "left_emergency") {
-      navigate("/feed");
-    } else {
-      // Si fue "aburrido", también salir
-      navigate("/feed");
+    // 🎯 Feedback diferenciado según la razón
+    if (reason === "left_emergency") {
+      // Emergencia: agradecemos y avisamos que se envió reporte urgente
+      setDecisionResult({
+        status: "abandoned_emergency",
+        message:
+          "Tu reporte urgente fue enviado. Bloqueamos a esta persona. Cuídate 💚",
+      });
+      return;
     }
+
+    if (reason === "left_rude") {
+      setDecisionResult({
+        status: "abandoned_rude",
+        message:
+          "Gracias por avisar. Revisamos los reportes y tomamos acción cuando corresponde.",
+      });
+      return;
+    }
+
+    // left_bored → simplemente volver al feed
+    navigate("/feed");
   };
 
   const formatTime = (seconds) => {
@@ -219,6 +236,47 @@ export default function BlindChatView() {
               </button>
             </>
           )}
+          {decisionResult.status === "abandoned_rude" && (
+            <>
+              <div className="text-5xl mb-4">🛡️</div>
+              <h2 className="text-xl font-bold text-text-primary mb-2">
+                Reporte enviado
+              </h2>
+              <p className="text-text-secondary text-[13px] mb-6">
+                {decisionResult.message}
+              </p>
+              <button
+                onClick={() => navigate("/feed")}
+                className="w-full py-3 bg-accent text-bg rounded-xl font-medium text-[13px] hover:opacity-90 transition-opacity"
+              >
+                Volver al feed
+              </button>
+            </>
+          )}
+
+          {decisionResult.status === "abandoned_emergency" && (
+            <>
+              <div className="text-5xl mb-4">🚨</div>
+              <h2 className="text-xl font-bold text-error mb-2">
+                Estás a salvo
+              </h2>
+              <p className="text-text-secondary text-[13px] mb-6">
+                {decisionResult.message}
+              </p>
+              <div className="p-3 rounded-xl bg-error/8 border border-error/20 mb-4 text-left">
+                <p className="text-[11.5px] text-text-primary leading-relaxed">
+                  Si estás en peligro real, llama a la línea{" "}
+                  <strong className="text-error">123</strong>.
+                </p>
+              </div>
+              <button
+                onClick={() => navigate("/feed")}
+                className="w-full py-3 bg-accent text-bg rounded-xl font-medium text-[13px] hover:opacity-90 transition-opacity"
+              >
+                Volver al feed
+              </button>
+            </>
+          )}
         </div>
       </main>
     );
@@ -266,7 +324,7 @@ export default function BlindChatView() {
         {/* Perfil censurado (izquierda) */}
         <div className="border-r border-border-soft overflow-y-auto p-5 bg-bg">
           <div className="text-center mb-5">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent/40 to-accent mx-auto mb-3 flex items-center justify-center text-3xl">
+            <div className="w-20 h-20 rounded-full bg-linear-to-br from-accent/40 to-accent mx-auto mb-3 flex items-center justify-center text-3xl">
               🎭
             </div>
             <div className="text-[15px] font-bold text-text-primary">

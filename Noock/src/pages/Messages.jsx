@@ -5,6 +5,7 @@ import AppLayout from "../components/layout/AppLayout";
 import ChatPanel from "../components/chat/ChatPanel";
 import { useConversations } from "../hooks/useConversations";
 import { useBlindChats } from "../hooks/useBlindChats";
+import { useDiscovery } from "../hooks/useDiscovery";
 
 export default function Messages() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export default function Messages() {
   );
   const [search, setSearch] = useState("");
   const [showArchived, setShowArchived] = useState(false);
+  useDiscovery("visit_messages");
 
   // Separar en activos y archivados
   const activeConversations = conversations.filter((c) => !c.is_archived);
@@ -105,7 +107,7 @@ export default function Messages() {
                     onClick={() => navigate(`/blind/${bc.id}`)}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-bg-alt transition-colors text-left mb-1"
                   >
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-accent/40 to-accent flex items-center justify-center text-base shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-linear-to-br from-accent/40 to-accent flex items-center justify-center text-base shrink-0">
                       🎭
                     </div>
                     <div className="flex-1 min-w-0">
@@ -235,7 +237,7 @@ function ChatListItem({ conv, active, onClick }) {
             {conv.last_message || "Di hola 👋"}
           </p>
           {conv.unread_count > 0 && (
-            <span className="min-w-[16px] h-[16px] px-1 rounded-full bg-text-primary text-bg text-[9px] font-semibold flex items-center justify-center shrink-0 ml-2">
+            <span className="min-w-4 h-4 px-1 rounded-full bg-text-primary text-bg text-[9px] font-semibold flex items-center justify-center shrink-0 ml-2">
               {conv.unread_count}
             </span>
           )}

@@ -1,14 +1,6 @@
-import { useState } from "react";
-import {
-  Bug,
-  X,
-  Send,
-  Check,
-  Loader2,
-  AlertCircle,
-  Lightbulb,
-  MessageCircle,
-} from "lucide-react";
+import { useState, useEffect } from "react";
+//prettier-ignore
+import { Bug, X, Send, Check, Loader2, AlertCircle, Lightbulb, MessageCircle, } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
 const CATEGORIES = [
@@ -38,38 +30,23 @@ const CATEGORIES = [
   },
 ];
 
-/**
- * Modal de reporte + botón flotante opcional.
- *
- * Uso 1 (no controlado, botón flotante):
- *   <ReportBugButton />
- *
- * Uso 2 (controlado, sin botón flotante, se abre desde afuera):
- *   <ReportBugButton open={bugOpen} onClose={() => setBugOpen(false)} />
- */
-export default function ReportBugButton({
-  open: controlledOpen,
-  onClose: controlledOnClose,
-} = {}) {
-  const isControlled = controlledOpen !== undefined;
-
-  const [internalOpen, setInternalOpen] = useState(false);
-  const open = isControlled ? controlledOpen : internalOpen;
-
-  const setOpen = (val) => {
-    if (isControlled) {
-      if (!val) controlledOnClose?.();
-    } else {
-      setInternalOpen(val);
-    }
-  };
-
+//Componente
+export default function ReportBugButton() {
+  const [open, setOpen] = useState(false);
   const [category, setCategory] = useState(null);
   const [content, setContent] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState(null);
 
+  //HOOK #1:Escuchar trigger externo (desde el topbar)
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener("nook:open-report-bug", handler);
+    return () => window.removeEventListener("nook:open-report-bug", handler);
+  }, []);
+
+  //Funciones
   const reset = () => {
     setCategory(null);
     setContent("");
@@ -105,7 +82,6 @@ export default function ReportBugButton({
       return;
     }
 
-    // Contexto auto-capturado
     const contextData = {
       url: window.location.href,
       pathname: window.location.pathname,
@@ -137,7 +113,6 @@ export default function ReportBugButton({
     setSending(false);
     setSent(true);
 
-    // Auto-cerrar después de 3 segundos
     setTimeout(() => {
       handleClose();
     }, 3000);
@@ -145,17 +120,15 @@ export default function ReportBugButton({
 
   return (
     <>
-      {/* Botón flotante SOLO cuando NO es controlado (fallback de escritorio) */}
-      {!isControlled && (
-        <button
-          onClick={() => setOpen(true)}
-          className="report-bug-btn hidden md:flex"
-          title="Reportar un bug o idea"
-          aria-label="Reportar"
-        >
-          <Bug size={20} strokeWidth={2.2} />
-        </button>
-      )}
+      {/* Botón flotante — visible en móvil y desktop */}
+      <button
+        onClick={() => setOpen(true)}
+        className="report-bug-btn"
+        title="Reportar un bug o idea"
+        aria-label="Reportar"
+      >
+        <Bug size={20} strokeWidth={2.2} />
+      </button>
 
       {/* Modal */}
       {open && (
@@ -165,28 +138,26 @@ export default function ReportBugButton({
             onClick={(e) => e.stopPropagation()}
           >
             {sent ? (
-              // Estado de éxito
               <div className="report-bug-success">
                 <div className="report-bug-success__icon">
                   <Check size={32} strokeWidth={3} />
                 </div>
                 <h2>¡Gracias!</h2>
-                <p>Tu mensaje llegó al fundador. Lo va a revisar pronto.</p>
+                <p>Tu mensaje llegó al equipo. Lo vamos a revisar pronto.</p>
                 <button onClick={handleClose} className="report-bug-close-btn">
                   Cerrar
                 </button>
               </div>
             ) : (
               <>
-                {/* Header */}
                 <div className="report-bug-header">
                   <div>
                     <h2 className="report-bug-title">
                       <MessageCircle size={18} />
-                      Habla con el fundador
+                      Habla con nosotros
                     </h2>
                     <p className="report-bug-subtitle">
-                      Cuéntanos lo que piensas. Se envía directo a Kevin.
+                      Cuéntanos lo que piensas. Se envía directo a soporte.
                     </p>
                   </div>
                   <button
@@ -198,7 +169,6 @@ export default function ReportBugButton({
                   </button>
                 </div>
 
-                {/* Categorías */}
                 <div className="report-bug-categories">
                   {CATEGORIES.map((cat) => {
                     const Icon = cat.icon;
@@ -237,7 +207,6 @@ export default function ReportBugButton({
                   })}
                 </div>
 
-                {/* Textarea */}
                 <div className="report-bug-field">
                   <label className="report-bug-label">
                     Cuéntanos qué pasó
@@ -260,7 +229,6 @@ export default function ReportBugButton({
                   />
                 </div>
 
-                {/* Error */}
                 {error && (
                   <div className="report-bug-error">
                     <AlertCircle size={12} />
@@ -268,7 +236,6 @@ export default function ReportBugButton({
                   </div>
                 )}
 
-                {/* Submit */}
                 <button
                   onClick={handleSubmit}
                   disabled={sending || !category || content.trim().length < 5}
@@ -282,13 +249,14 @@ export default function ReportBugButton({
                   ) : (
                     <>
                       <Send size={14} />
-                      Enviar a SOPORTE
+                      Enviar a soporte
                     </>
                   )}
                 </button>
 
                 <p className="report-bug-hint">
-                  Adjuntamos automáticamente la URL y tu navegador para que SOPORTE pueda reproducir el bug.
+                  Adjuntamos automáticamente la URL y tu navegador para poder
+                  reproducir el bug.
                 </p>
               </>
             )}

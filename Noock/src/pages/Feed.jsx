@@ -1,3 +1,4 @@
+// src/pages/Feed.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -9,6 +10,12 @@ import ProfileDetails from "../components/discover/ProfileDetails";
 import { useSound } from "../hooks/useSound";
 import { useCanInteract } from "../hooks/useCanInteract";
 import { useAuth } from "../hooks/useAuth";
+import DailyLoginBanner from "../components/daily/DailyLoginBanner";
+import { useDiscovery } from "../hooks/useDiscovery";
+import NewsBanner from "../components/feed/NewsBanner";
+import { useSwipeLimit } from "../hooks/useSwipeLimit";
+import SwipeCounter from "../components/discover/SwipeCounter";
+import NoSwipesModal from "../components/discover/NoSwipesModal";
 
 //Componente
 export default function Feed() {
@@ -21,12 +28,22 @@ export default function Feed() {
     profile?.onboarding_completed,
     profile?.role === "founder",
   );
+
+  // 🔄 Fase 9 — Swipe limit
+  const { canSwipe, swipesLeft, maxSwipes, resetAt, recordSwipe } =
+    useSwipeLimit();
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [processing, setProcessing] = useState(false);
   const [favoritedIds, setFavoritedIds] = useState(new Set());
   const [matched, setMatched] = useState(null);
+  const [toast, setToast] = useState(null);
+
   const currentProfile = profiles[currentIndex] || null;
   const [detailsSheetOpen, setDetailsSheetOpen] = useState(false);
+  const [noSwipesOpen, setNoSwipesOpen] = useState(false); // Fase 9
+
+  useDiscovery("visit_feed");
 
   // Cerrar sheet al cambiar de perfil
   useEffect(() => {
@@ -37,12 +54,10 @@ export default function Feed() {
   useEffect(() => {
     const handleMatch = async (e) => {
       const { matchId, otherUserId } = e.detail;
-      // Buscar el perfil para mostrar el popup
       const found = profiles.find((p) => p.id === otherUserId);
       if (found) {
         setMatched({ profile: found, matchId });
       } else {
-        // Si no está en el feed actual, al menos refresca
         refetch();
       }
     };
@@ -70,50 +85,103 @@ export default function Feed() {
     loadFavorites();
   }, []);
 
-  //Match configuraciones
-  const handleLike = async () => {
+  // Auto-ocultar toast
+  useEffect(() => {
+    if (!toast) return;
+    const timeout = setTimeout(() => setToast(null), 4000);
+    return () => clearTimeout(timeout);
+  }, [toast]);
+
+  // ============================================
+  // Fase 11 — "Hablar primero" (no consume swipe)
+  // ============================================
+  const handleStartBlindChat = async () => {
     if (!currentProfile || processing) return;
     if (!canInteract) {
-      alert(
-        blockReason === "readonly"
-          ? "Estás en modo exploración. Completa tu perfil para dar likes."
-          : "Completa tu perfil para interactuar.",
-      );
+      setToast({
+        type: "error",
+        message:
+          blockReason === "readonly"
+            ? "Estás en modo exploración. Completa tu perfil para interactuar."
+            : "Completa tu perfil para interactuar.",
+      });
       return;
     }
+
     setProcessing(true);
 
-    const { data, error } = await supabase.rpc("send_like", {
+    // 1. Like silencioso (registra interés, no bloquea el flujo)
+    const { data: likeData, error: likeErr } = await supabase.rpc("send_like", {
       target_user_id: currentProfile.id,
     });
 
-    if (error) {
-      console.error("🚨 NOOK-403: Error enviando like", error);
-    } else if (data?.matched) {
+    if (likeErr) {
+      console.warn("Like silencioso falló:", likeErr.message);
+    }
+
+    // 2. Si con ese like ya hubo match → overlay y no abrimos blind
+    if (likeData?.matched) {
       play("match");
-      // Match directo → mostrar overlay
       setMatched({
         profile: currentProfile,
-        matchId: data.match_id,
+        matchId: likeData.match_id,
       });
       setProcessing(false);
       return;
     }
 
+    // 3. Iniciar cita a ciegas
+    const { data: blindData, error: blindErr } = await supabase.rpc(
+      "start_blind_chat",
+      { target_user_id: currentProfile.id },
+    );
+
     setProcessing(false);
-    setCurrentIndex((prev) => prev + 1);
+
+    if (blindErr || blindData?.error) {
+      console.warn(
+        "No pudimos iniciar la cita a ciegas:",
+        blindErr?.message || blindData?.error,
+      );
+      setToast({
+        type: "error",
+        message:
+          "No pudimos iniciar la cita a ciegas. Vuelve a intentarlo en un momento.",
+      });
+      return;
+    }
+
+    const chatId = blindData?.chat_id;
+    if (chatId) {
+      play("blind_chat");
+      navigate(`/blind/${chatId}`);
+    } else {
+      navigate("/messages");
+    }
   };
 
+  // ============================================
+  // Fase 9 — "No me interesa" (consume swipe)
+  // ============================================
   const handlePass = async () => {
     if (!currentProfile || processing) return;
     if (!canInteract) {
-      alert(
-        blockReason === "readonly"
-          ? "Estás en modo exploración. Completa tu perfil para interactuar."
-          : "Completa tu perfil para interactuar.",
-      );
+      setToast({
+        type: "error",
+        message:
+          blockReason === "readonly"
+            ? "Estás en modo exploración. Completa tu perfil para interactuar."
+            : "Completa tu perfil para interactuar.",
+      });
       return;
     }
+
+    // 🚫 Gate de swipes
+    if (!canSwipe) {
+      setNoSwipesOpen(true);
+      return;
+    }
+
     setProcessing(true);
 
     const { error } = await supabase.rpc("send_pass", {
@@ -124,15 +192,21 @@ export default function Feed() {
       console.error("🚨 NOOK-403: Error enviando pass", error);
     }
 
+    // ✅ Registrar swipe
+    await recordSwipe();
+
     setProcessing(false);
     setCurrentIndex((prev) => prev + 1);
   };
 
-  //Add favorito
+  // Favorito (NO consume swipe)
   const handleToggleFavorite = async () => {
     if (!currentProfile) return;
     if (!canInteract) {
-      alert("Completa tu perfil para guardar perfiles.");
+      setToast({
+        type: "error",
+        message: "Completa tu perfil para guardar perfiles.",
+      });
       return;
     }
 
@@ -153,7 +227,7 @@ export default function Feed() {
     });
   };
 
-  //Reporte
+  // Reporte (NO consume swipe)
   const handleReport = async (reason) => {
     if (!currentProfile) return;
 
@@ -186,6 +260,7 @@ export default function Feed() {
     return (
       <AppLayout>
         <div className="h-full flex items-center justify-center flex-col gap-3">
+          <DailyLoginBanner />
           <div className="text-text-primary text-[14px] font-medium">
             Algo salió mal
           </div>
@@ -225,9 +300,26 @@ export default function Feed() {
 
   return (
     <AppLayout>
+      {/* 🔔 Overlay flotante Fase 5 */}
+      <NewsBanner />
+      {/* TOAST flotante */}
+      {toast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-200 w-[calc(100%-32px)] max-w-sm animate-in">
+          <div
+            className={`rounded-2xl shadow-2xl px-4 py-3 text-[12.5px] font-semibold text-center ${
+              toast.type === "error"
+                ? "bg-error text-white"
+                : "bg-ink text-cream"
+            }`}
+          >
+            {toast.message}
+          </div>
+        </div>
+      )}
+
       {matched && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={() => setMatched(null)}
         >
           <div
@@ -262,20 +354,39 @@ export default function Feed() {
         </div>
       )}
 
-      {/*  Desktop: 2 columnas | Móvil: solo card */}
+      {/* Modal sin swipes (Fase 9) */}
+      <NoSwipesModal
+        open={noSwipesOpen}
+        profile={currentProfile}
+        resetAt={resetAt}
+        onClose={() => setNoSwipesOpen(false)}
+      />
+
+      {/* Desktop: 2 columnas | Móvil: solo card */}
       <div className="h-full w-full flex items-center justify-center p-2 md:p-4 min-h-0 overflow-hidden">
-        <div className="w-full max-w-5xl h-full max-h-[820px] grid grid-cols-1 md:grid-cols-[1.1fr_1fr] grid-rows-1 gap-3 md:gap-4 min-h-0">
-          <div className="min-h-0 h-full">
-            <DiscoverCard
-              profile={currentProfile}
-              onLike={handleLike}
-              onPass={handlePass}
-              onSave={handleToggleFavorite}
-              onReport={handleReport}
-              onShowDetails={() => setDetailsSheetOpen(true)}
-              isFavorited={favoritedIds.has(currentProfile.id)}
-              disabled={processing}
-            />
+        <div className="w-full max-w-5xl h-full max-h-205 grid grid-cols-1 md:grid-cols-[1.1fr_1fr] grid-rows-1 gap-3 md:gap-4 min-h-0">
+          {/* Columna izquierda: contador + card */}
+          <div className="min-h-0 h-full flex flex-col gap-2">
+            <div className="shrink-0">
+              <SwipeCounter
+                swipesLeft={swipesLeft}
+                maxSwipes={maxSwipes}
+                resetAt={resetAt}
+              />
+            </div>
+
+            <div className="flex-1 min-h-0">
+              <DiscoverCard
+                profile={currentProfile}
+                onStartBlindChat={handleStartBlindChat}
+                onPass={handlePass}
+                onSave={handleToggleFavorite}
+                onReport={handleReport}
+                onShowDetails={() => setDetailsSheetOpen(true)}
+                isFavorited={favoritedIds.has(currentProfile.id)}
+                disabled={processing}
+              />
+            </div>
           </div>
 
           {/* Detalles solo en desktop */}
@@ -287,8 +398,7 @@ export default function Feed() {
 
       {/* Sheet de detalles (solo móvil) */}
       {detailsSheetOpen && (
-        <div className="md:hidden fixed inset-0 z-[150] bg-bg flex flex-col">
-          {/* Header con back */}
+        <div className="md:hidden fixed inset-0 z-150 bg-bg flex flex-col">
           <div className="flex items-center gap-3 p-3 border-b border-border-soft shrink-0">
             <button
               onClick={() => setDetailsSheetOpen(false)}
@@ -301,7 +411,6 @@ export default function Feed() {
             </span>
           </div>
 
-          {/* Contenido */}
           <div className="flex-1 min-h-0 overflow-y-auto">
             <ProfileDetails profile={currentProfile} />
           </div>

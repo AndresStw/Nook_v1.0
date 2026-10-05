@@ -49,7 +49,6 @@ export default function AdminRoute({ children }) {
   if (!user) return <Navigate to="/login" replace />;
 
   if (!ADMIN_EMAILS.includes(user.email) || profile?.role !== "founder") {
-    
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center p-6">
         <div className="bg-bg-surface border border-error/30 rounded-2xl p-8 max-w-md text-center">

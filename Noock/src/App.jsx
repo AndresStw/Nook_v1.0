@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-
+import EventsPage from "./pages/EventsPage";
 import Landing from "./pages/Landing";
 import VerifyEmail from "./pages/VerifyEmail";
 import Search from "./pages/Search";
@@ -21,13 +21,16 @@ import PublicProfile from "./pages/PublicProfile";
 import AdminPanel from "./pages/AdminPanel";
 import AdminRoute from "./components/auth/AdminRoute";
 import SupportMessageBanner from "./components/support/SupportMessageBanner";
+import DiscoveryToast from "./components/ui/DiscoveryToast";
 
+//Componente principal
 export default function App() {
   return (
     <>
       <BlindChatInvite />
-
+      <ReportBugButton />
       <SupportMessageBanner />
+      <DiscoveryToast />
       <Routes>
         {/* Públicas */}
         <Route path="/" element={<Landing />} />
@@ -74,6 +77,16 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/events"
+          element={
+            <ProtectedRoute>
+              <EventsPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/explore"
           element={

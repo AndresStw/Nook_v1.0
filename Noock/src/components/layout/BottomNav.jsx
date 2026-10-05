@@ -1,16 +1,18 @@
 import { NavLink } from "react-router-dom";
-import { Home, Search, Heart, MessageCircle, User } from "lucide-react";// iconos
+//prettier-ignore
+import { Home, Search, Heart, MessageCircle, PartyPopper } from "lucide-react"; // iconos
 import { useUnreadCount } from "../../hooks/useUnreadCount";
 
 //Componente
 export default function BottomNav() {
   const unreadCount = useUnreadCount();
   const navItems = [
-    { to: "/feed", icon: Home, label: "Inicio" },
-    { to: "/explore", icon: Search, label: "Explorar" },
-    { to: "/connections", icon: Heart, label: "Conexiones" },
-    { to: "/messages", icon: MessageCircle, label: "Mensajes", badge: unreadCount, },
-    { to: "/me", icon: User, label: "Perfil" },
+    { to: "/explore", icon: Search, label: "" },
+    { to: "/connections", icon: Heart, label: "" }, //Falta agrega o quitar un icoco
+    { to: "/feed", icon: Home, label: "" }, //Se cambio al centro para mas comodidad
+    //prettier-ignore
+    { to: "/messages", icon: MessageCircle, label: "", badge: unreadCount, },
+    { to: "/events", icon: PartyPopper, label: "" },
   ];
 
   //md:hidden es para moviles si nbo tiene el md es para web
@@ -34,7 +36,7 @@ export default function BottomNav() {
               <div className="relative">
                 <Icon size={20} strokeWidth={isActive ? 2.4 : 1.8} />
                 {badge > 0 && (
-                  <span className="absolute -top-1 -right-2 min-w-[14px] h-[14px] px-1 rounded-full bg-error text-white text-[8px] font-bold flex items-center justify-center">
+                  <span className="absolute -top-1 -right-2 min-w-3.5 h-3.5 px-1 rounded-full bg-error text-white text-[8px] font-bold flex items-center justify-center">
                     {badge > 9 ? "9+" : badge}
                   </span>
                 )}

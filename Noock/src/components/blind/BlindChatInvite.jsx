@@ -59,8 +59,11 @@ export default function BlindChatInvite() {
   }, []);
 
   // Cargar invitación pendiente al montar (solo si está autenticado)
+  // Cargar invitación pendiente al montar (solo si está autenticado Y NO estás en /blind)
   useEffect(() => {
     if (!currentUserId) return;
+    if (isBlindChatRoute) return; // 👈 FIX
+
     const checkPending = async () => {
       const { data } = await supabase
         .from("blind_chats")
@@ -78,11 +81,12 @@ export default function BlindChatInvite() {
       }
     };
     checkPending();
-  }, [currentUserId]);
+  }, [currentUserId, isBlindChatRoute]);
 
   // Realtime
   useEffect(() => {
     if (!currentUserId) return;
+    if (isBlindChatRoute) return;
 
     const channel = supabase
       .channel(`blind-invites-${currentUserId}`)
@@ -118,7 +122,7 @@ export default function BlindChatInvite() {
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current);
     };
-  }, [currentUserId]);
+  }, [currentUserId, isBlindChatRoute]);
 
   // Detectar votos del otro (desde el chat que llega por Realtime)
   useEffect(() => {

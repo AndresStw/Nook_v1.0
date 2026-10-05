@@ -1,4 +1,5 @@
-import { MapPin, Sparkles, Heart } from "lucide-react";
+// src/components/discover/ProfileDetails.jsx
+import { MapPin, Sparkles, Star } from "lucide-react";
 import Badges from "./Badges";
 import ProfileAttributes from "./ProfileAttributes";
 import PiBadge from "../ui/PiBadge";
@@ -10,8 +11,15 @@ export default function ProfileDetails({ profile }) {
 
   const isFounder = profile.role === "founder";
   const hearts = profile.hearts ?? 3;
-  const answers = profile.answers || [];
+  const rawAnswers = profile.answers || [];
   const interests = profile.interests || [];
+
+  // Ordenar: featured primero, luego el resto
+  const answers = [...rawAnswers].sort((a, b) => {
+    if (a.is_featured && !b.is_featured) return -1;
+    if (!a.is_featured && b.is_featured) return 1;
+    return 0;
+  });
 
   // Obtener etiqueta de género legible
   const genderKey = profile.gender_internal || profile.gender;
@@ -63,7 +71,7 @@ export default function ProfileDetails({ profile }) {
         </div>
       </div>
 
-      {/* Insignias + Corazones (el fundador no tiene corazones) */}
+      {/* Insignias + Corazones */}
       <div className="px-5 py-3.5 border-b border-border-soft shrink-0 flex items-center justify-between">
         <Badges profile={profile} />
 
@@ -73,57 +81,61 @@ export default function ProfileDetails({ profile }) {
             className="flex items-center gap-1 cursor-help"
           >
             {[1, 2, 3].map((i) => (
-              <Heart
+              <span
                 key={i}
-                size={13}
-                className={
-                  i <= hearts
-                    ? "text-accent fill-accent"
-                    : "text-text-tertiary/30"
-                }
-              />
+                className={`text-[13px] ${
+                  i <= hearts ? "text-accent" : "text-text-tertiary/30"
+                }`}
+              >
+                ♥
+              </span>
             ))}
           </div>
         )}
       </div>
 
-      {/* Contenido con scroll */}
+      {/* Contenido con scroll — respuestas primero */}
       <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-5">
-        {/* Biografía en cajita contenida */}
-        {profile.bio && (
-          <div>
-            <div className="text-[10px] text-text-tertiary uppercase tracking-wider mb-2 font-semibold">
-              Sobre mí
-            </div>
-            <div className="bg-bg-alt rounded-2xl p-4 border border-border-soft shadow-xs">
-              <p className="text-[12.5px] text-text-primary leading-relaxed break-words whitespace-pre-wrap">
-                {profile.bio}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Las 3 preguntas y respuestas */}
+        {/* ⭐ RESPUESTAS — van arriba porque son lo único visible pre-match */}
         {answers.length > 0 && (
           <div>
             <div className="text-[10px] text-text-tertiary uppercase tracking-wider mb-2.5 flex items-center gap-1 font-semibold">
               <Sparkles size={11} className="text-accent" />
-              Sus respuestas ({answers.length})
+              Lo que dice ({answers.length})
             </div>
-            <div className="space-y-2.5">
-              {answers.map((a, i) => (
-                <div
-                  key={i}
-                  className="bg-bg-alt rounded-2xl p-3.5 border border-border-soft space-y-1 shadow-xs"
-                >
-                  <div className="text-[11px] font-semibold text-text-secondary leading-snug">
-                    {a.question}
+            <div className="space-y-3">
+              {answers.map((a, i) => {
+                const isFeatured = a.is_featured;
+                return (
+                  <div
+                    key={i}
+                    className={`rounded-2xl p-4 border shadow-xs ${
+                      isFeatured
+                        ? "bg-accent/5 border-accent/30"
+                        : "bg-bg-alt border-border-soft"
+                    }`}
+                  >
+                    {isFeatured && (
+                      <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent text-bg text-[9px] font-bold uppercase tracking-wider mb-2">
+                        <Star size={8} className="fill-bg" />
+                        Destacada
+                      </div>
+                    )}
+                    <div className="text-[11px] font-semibold text-text-secondary leading-snug mb-1.5">
+                      {a.question}
+                    </div>
+                    <div
+                      className={`leading-relaxed wrap-break-word italic ${
+                        isFeatured
+                          ? "text-[14.5px] text-text-primary font-medium"
+                          : "text-[13px] text-text-primary"
+                      }`}
+                    >
+                      "{a.answer}"
+                    </div>
                   </div>
-                  <div className="text-[13px] text-text-primary leading-relaxed break-words italic">
-                    "{a.answer}"
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -147,7 +159,21 @@ export default function ProfileDetails({ profile }) {
           </div>
         )}
 
-        {/* Atributos / Detalles (Género, Altura, Signo, etc.) */}
+        {/* Biografía — ahora va abajo */}
+        {profile.bio && (
+          <div>
+            <div className="text-[10px] text-text-tertiary uppercase tracking-wider mb-2 font-semibold">
+              Sobre mí
+            </div>
+            <div className="bg-bg-alt rounded-2xl p-4 border border-border-soft shadow-xs">
+              <p className="text-[12.5px] text-text-primary leading-relaxed wrap-break-word whitespace-pre-wrap">
+                {profile.bio}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Atributos */}
         <ProfileAttributes profile={profile} />
       </div>
     </div>

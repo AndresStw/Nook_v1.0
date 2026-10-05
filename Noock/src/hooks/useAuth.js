@@ -1,6 +1,7 @@
 // src/hooks/useAuth.js
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabase";
+let chispazoTriggeredForUser = null;
 
 export function useAuth() {
   const [user, setUser] = useState(null);
@@ -91,9 +92,12 @@ export function useAuth() {
     setLoading(false);
   };
 
-  // Disparar chispazo al loguearse
+  // Disparar chispazo al loguearse (SOLO UNA VEZ por usuario)
   useEffect(() => {
     if (!user) return;
+    if (chispazoTriggeredForUser === user.id) return; // ← evita duplicados
+    chispazoTriggeredForUser = user.id;
+
     const timeout = setTimeout(async () => {
       const { data, error } = await supabase.rpc("maybe_trigger_chispazo");
       if (!error && data?.status === "created") {
@@ -131,6 +135,7 @@ export function useAuth() {
     await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
+    chispazoTriggeredForUser = null; // Nuevo para reset
   };
 
   return {

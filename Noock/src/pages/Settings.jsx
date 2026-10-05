@@ -1,15 +1,29 @@
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Lock, Trash2, LogOut } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+//prettier-ignore
+import { ArrowLeft, Lock, Trash2, LogOut, FileText, Shield } from "lucide-react";
 import AppLayout from "../components/layout/AppLayout";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabase";
+import LegalModal from "../components/legal/LegalModal";
+import PrivacyContent from "../components/legal/PrivacyContent";
+import TermsContent from "../components/legal/TermsContent";
 
-//Componente
 export default function Settings() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [legalModal, setLegalModal] = useState(null);
 
-///Restablecer contrasena
+  // Abrir modal desde query param (?legal=privacy o ?legal=terms)
+  useEffect(() => {
+    const param = searchParams.get("legal");
+    if (param === "privacy" || param === "terms") {
+      setLegalModal(param);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
   const handlePasswordReset = async () => {
     const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
       redirectTo: `${window.location.origin}/settings`,
@@ -18,7 +32,6 @@ export default function Settings() {
     else alert("Te enviamos un correo para cambiar tu contraseña.");
   };
 
-//Eliminar cuenta totalemente
   const handleDeleteAccount = async () => {
     const confirmed = confirm(
       "¿Eliminar tu cuenta? Esta acción es PERMANENTE y no se puede deshacer.\n\n" +
@@ -27,7 +40,6 @@ export default function Settings() {
     );
     if (!confirmed) return;
 
-    // Segunda confirmación para evitar accidentes
     const finalConfirm = confirm("¿Estás completamente seguro?");
     if (!finalConfirm) return;
 
@@ -39,7 +51,6 @@ export default function Settings() {
         return;
       }
 
-      // Llamar a la Edge Function
       const { data, error } = await supabase.functions.invoke(
         "delete-account",
         {
@@ -52,7 +63,6 @@ export default function Settings() {
         return;
       }
 
-      // Éxito  cerrar sesión y volver al landing
       await signOut();
       alert(
         "Tu cuenta fue eliminada. Gracias por haber sido parte de Nook. 💚",
@@ -99,6 +109,37 @@ export default function Settings() {
               </div>
             </button>
 
+            {/* Nuevos items legales */}
+            <button
+              onClick={() => setLegalModal("privacy")}
+              className="w-full flex items-center gap-3 px-4 py-3.5 bg-bg-surface border border-border rounded-xl hover:bg-bg-alt transition-colors text-left"
+            >
+              <FileText size={16} className="text-text-secondary" />
+              <div className="flex-1">
+                <div className="text-[13px] font-semibold text-text-primary">
+                  Política de privacidad
+                </div>
+                <div className="text-[11px] text-text-secondary">
+                  Lee y gana 300 PI
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setLegalModal("terms")}
+              className="w-full flex items-center gap-3 px-4 py-3.5 bg-bg-surface border border-border rounded-xl hover:bg-bg-alt transition-colors text-left"
+            >
+              <Shield size={16} className="text-text-secondary" />
+              <div className="flex-1">
+                <div className="text-[13px] font-semibold text-text-primary">
+                  Políticas y tratamiento de datos
+                </div>
+                <div className="text-[11px] text-text-secondary">
+                  Lee y gana 300 PI
+                </div>
+              </div>
+            </button>
+
             <button
               onClick={handleSignOut}
               className="w-full flex items-center gap-3 px-4 py-3.5 bg-bg-surface border border-border rounded-xl hover:bg-bg-alt transition-colors text-left"
@@ -131,6 +172,24 @@ export default function Settings() {
           </div>
         </div>
       </div>
+
+      <LegalModal
+        open={legalModal === "privacy"}
+        documentKey="privacy"
+        title="Política de privacidad"
+        onClose={() => setLegalModal(null)}
+      >
+        <PrivacyContent />
+      </LegalModal>
+
+      <LegalModal
+        open={legalModal === "terms"}
+        documentKey="terms"
+        title="Políticas y tratamiento de datos"
+        onClose={() => setLegalModal(null)}
+      >
+        <TermsContent />
+      </LegalModal>
     </AppLayout>
   );
 }

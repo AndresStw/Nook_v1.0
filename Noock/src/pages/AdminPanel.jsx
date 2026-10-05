@@ -28,10 +28,12 @@ import {
   Trash2,
   ShieldOff,
   Download, //Nuevo para el CVG de reportes
+  BarChart3,
 } from "lucide-react";
 import AppLayout from "../components/layout/AppLayout";
 import { supabase } from "../lib/supabase";
 import { exportToCsv, buildFilename } from "../lib/exportCsv";
+import MetricsPanel from "../components/admin/MetricsPanel";
 
 export default function AdminPanel() {
   const navigate = useNavigate();
@@ -528,6 +530,12 @@ export default function AdminPanel() {
               icon={Sparkles}
               label="Herramientas"
             />
+            <TabButton
+              active={tab === "metrics"}
+              onClick={() => setTab("metrics")}
+              icon={BarChart3}
+              label="Métricas"
+            />
           </div>
 
           {loading && (
@@ -903,6 +911,13 @@ export default function AdminPanel() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* === TAB MÉTRICAS === */}
+          {!loading && tab === "metrics" && (
+            <div className="bg-bg-surface border border-border rounded-2xl p-6">
+              <MetricsPanel />
             </div>
           )}
         </div>
@@ -1308,7 +1323,7 @@ export default function AdminPanel() {
       {/* TOAST */}
       {feedback && (
         <div
-          className={`fixed top-6 left-1/2 -translate-x-1/2 z-[300] px-5 py-3 rounded-full font-semibold text-[12.5px] shadow-xl ${
+          className={`fixed top-6 left-1/2 -translate-x-1/2 z-300 px-5 py-3 rounded-full font-semibold text-[12.5px] shadow-xl ${
             feedback.type === "ok" ? "bg-ink text-cream" : "bg-error text-white"
           }`}
         >
@@ -1402,7 +1417,7 @@ function Label({ children }) {
 function Modal({ children, onClose, title, subtitle }) {
   return (
     <div
-      className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+      className="fixed inset-0 z-200 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
       onClick={onClose}
     >
       <div

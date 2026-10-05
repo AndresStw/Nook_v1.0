@@ -15,15 +15,15 @@ export default function Landing() {
         </div>
 
         <p className="nook-landing__tagline">
-          Conexiones reales.
+          Primero hablas.
           <br />
-          Personas reales.
+          Luego decides.
         </p>
 
         <p className="nook-landing__description">
-          Aquí no se trata de deslizar,
+          Aquí las fotos están borrosas hasta que ambos se eligen.
           <br />
-          se trata de conectar.
+          Te conocen por lo que dices, no por cómo te ves.
         </p>
 
         <div className="nook-landing__actions">
@@ -39,7 +39,7 @@ export default function Landing() {
 
         <div className="nook-landing__footer">
           <span className="nook-landing__footer-heart">♡</span>
-          Un lugar para conectar de verdad.
+          Sin fotos hasta el match. Sin juicios antes.
         </div>
       </div>
 

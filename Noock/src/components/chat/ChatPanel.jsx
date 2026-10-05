@@ -321,7 +321,7 @@ export default function ChatPanel({ matchId, otherUser, onBack }) {
 
               {icebreakers.length > 0 ? (
                 <>
-                  <div className="text-[11px] text-text-tertiary text-center mb-4 max-w-[260px] leading-snug">
+                  <div className="text-[11px] text-text-tertiary text-center mb-4 max-w-65 leading-snug">
                     Elige una de las preguntas que{" "}
                     {otherUser?.name?.split(" ")[0] || "esta persona"}{" "}
                     respondió:
@@ -340,7 +340,7 @@ export default function ChatPanel({ matchId, otherUser, onBack }) {
                   </div>
                 </>
               ) : (
-                <div className="text-[11px] text-text-tertiary text-center max-w-[240px] leading-snug">
+                <div className="text-[11px] text-text-tertiary text-center max-w-60 leading-snug">
                   Manda un mensajito y rompe el hielo ✨
                 </div>
               )}
@@ -614,7 +614,7 @@ function PhotoPreviewPopover({
       }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      className="w-[260px] bg-bg-surface border border-border rounded-2xl shadow-elevated overflow-hidden animate-in"
+      className="w-65 bg-bg-surface border border-border rounded-2xl shadow-elevated overflow-hidden animate-in"
     >
       {/* Header */}
       <div className="px-3 py-2.5 border-b border-border-soft">

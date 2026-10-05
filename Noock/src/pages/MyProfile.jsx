@@ -2,57 +2,28 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import PiBadge from "../components/ui/PiBadge";
-import {
-  User,
-  MapPin,
-  Calendar,
-  Sparkles,
-  FileText,
-  Camera,
-  Trash2,
-  Plus,
-  Eye,
-  Loader2,
-  Check,
-  AlertCircle,
-  Lightbulb,
-  MessageCircle,
-  Lock,
-  Heart,
-  HelpCircle,
-  Palette,
-  X,
-  Search,
-  Settings2,
-  Move,
-} from "lucide-react";
-import {
-  invalidateCompletionCache,
-  setEscape as activateEscape,
-  getEscapeCount,
-  getNextEscapeConfig,
-  hasEscapesAvailable,
-} from "../lib/profileCompletion";
+import { useDiscovery } from "../hooks/useDiscovery";
+import MyEventArchives from "../components/events/MyEventArchives";
+
+//prettier-ignore
+import { User, MapPin, Calendar, Sparkles, FileText, Camera, Trash2,
+Plus, Eye, Loader2, Check, AlertCircle, Lightbulb, MessageCircle, Lock, Heart,
+HelpCircle, X, Search, Settings2, Move,  Star } from "lucide-react";
+
+//prettier-ignore
+import { invalidateCompletionCache, setEscape as activateEscape, getEscapeCount,
+getNextEscapeConfig, hasEscapesAvailable, } from "../lib/profileCompletion";
 import AppLayout from "../components/layout/AppLayout";
 import { useAuth } from "../hooks/useAuth";
 import { usePhotos } from "../hooks/usePhotos";
 import PhotoAdjustModal from "../components/ui/PhotoAdjustModal";
-import {
-  validateBio,
-  validateName,
-  validateTagline,
-} from "../lib/profileValidation";
-import {
-  SEXUAL_ORIENTATION,
-  MARITAL_STATUS,
-  HAS_KIDS,
-  SMOKES,
-  DRINKS,
-  PERSONALITY,
-  RELIGION,
-  LANGUAGES,
-  formatHeight,
-} from "../lib/profileLabels";
+
+//prettier-ignore
+import { validateBio, validateName, validateTagline, } from "../lib/profileValidation";
+
+//prettier-ignore
+import { SEXUAL_ORIENTATION, MARITAL_STATUS, HAS_KIDS, SMOKES, DRINKS, PERSONALITY, RELIGION,
+LANGUAGES, formatHeight, } from "../lib/profileLabels";
 import { COLOMBIAN_CITIES, isValidCity } from "../lib/cities";
 import { supabase } from "../lib/supabase";
 import "../assets/Css/myprofile.css";
@@ -88,43 +59,29 @@ const THEMES = [
   { id: "fundador", name: "? ? ?", color: "#E11D48", locked: true },
 ];
 
+//Componente
 export default function MyProfile() {
   const navigate = useNavigate();
   const { user, profile, refetchProfile } = useAuth();
   const { theme: currentTheme, setTheme: setCurrentTheme } = useTheme();
-  const {
-    uploadPhoto,
-    deletePhoto,
-    updatePhotoFocal,
-    uploadVideo,
-    deleteVideo,
-    uploading,
-    limits: photoLimits,
-    refreshLimits,
-  } = usePhotos(user?.id);
-
+  //prettier-ignore
+  const { uploadPhoto, deletePhoto, updatePhotoFocal, uploadVideo, deleteVideo, uploading, 
+  limits: photoLimits, refreshLimits, } = usePhotos(user?.id);
   const [tab, setTab] = useState("info");
-  const [form, setForm] = useState({
-    name: "",
-    tagline: "",
-    bio: "",
-    city: "",
-    birth_date: "",
-  });
+  //prettier-ignore
+  const [form, setForm] = useState({ name: "", tagline: "", bio: "", city: "", birth_date: "",});
   const [photos, setPhotos] = useState([]);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState(null);
-  const [nameInfo, setNameInfo] = useState({
-    changes_left: 2,
-    can_change: true,
-  });
+  //prettier-ignore
+  const [nameInfo, setNameInfo] = useState({ changes_left: 2, can_change: true, });
   const [errors, setErrors] = useState({});
   const [quoteIndex, setQuoteIndex] = useState(0);
-
   // Banner de perfil incompleto + escape
   const [searchParams, setSearchParams] = useSearchParams();
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [celebrated, setCelebrated] = useState(false);
+  useDiscovery("visit_profile");
 
   const showBlockBanner =
     !bannerDismissed &&
@@ -756,6 +713,58 @@ export default function MyProfile() {
       ];
     });
   };
+  const handleSetFeatured = async (answerObj) => {
+    if (!answerObj?.question_id) return;
+
+    // Buscar el id real del answer (puede no existir si nunca se guardó)
+    const existing = myAnswers.find(
+      (a) => a.question_id === answerObj.question_id && a.id,
+    );
+
+    if (!existing?.id) {
+      showToast(
+        "Guarda tu respuesta primero y luego márcala como destacada",
+        "error",
+      );
+      return;
+    }
+
+    // Si ya está featured → desmarcar
+    if (existing.is_featured) {
+      const { error } = await supabase.rpc("unset_featured_answer");
+      if (error) {
+        showToast(error.message, "error");
+        return;
+      }
+      setMyAnswers((prev) =>
+        prev.map((a) =>
+          a.question_id === answerObj.question_id
+            ? { ...a, is_featured: false }
+            : a,
+        ),
+      );
+      showToast("Respuesta desmarcada", "ok");
+      return;
+    }
+
+    // Marcar como featured (desmarca las demás)
+    const { error } = await supabase.rpc("set_featured_answer", {
+      p_answer_id: existing.id,
+    });
+
+    if (error) {
+      showToast(error.message, "error");
+      return;
+    }
+
+    setMyAnswers((prev) =>
+      prev.map((a) => ({
+        ...a,
+        is_featured: a.question_id === answerObj.question_id,
+      })),
+    );
+    showToast("⭐ Respuesta destacada", "ok");
+  };
 
   const handleSaveAnswers = async () => {
     const valid = myAnswers.filter(
@@ -793,8 +802,8 @@ export default function MyProfile() {
     <AppLayout>
       {/* Banner de perfil incompleto */}
       {showBlockBanner && completeness.percent < 75 && (
-        <div className="max-w-[1180px] mx-auto mt-2 mb-3 px-2">
-          <div className="relative rounded-2xl border-2 border-accent/40 bg-gradient-to-br from-accent/10 to-accent/5 p-5">
+        <div className="max-w-295 mx-auto mt-2 mb-3 px-2">
+          <div className="relative rounded-2xl border-2 border-accent/40 bg-linear-to-br from-accent/10 to-accent/5 p-5">
             <button
               onClick={() => {
                 setBannerDismissed(true);
@@ -879,7 +888,7 @@ export default function MyProfile() {
           <span className="heart">♡</span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 lg:gap-6 max-w-[1180px] mx-auto px-0.5 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 lg:gap-6 max-w-295 mx-auto px-0.5 w-full">
           {/* Columna izquierda */}
           <div>
             {/* Header */}
@@ -934,7 +943,7 @@ export default function MyProfile() {
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               <button
-                className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-[12px] font-medium whitespace-nowrap transition-all ${
+                className={`shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-[12px] font-medium whitespace-nowrap transition-all ${
                   tab === "info"
                     ? "bg-bg-surface text-text-primary shadow-sm"
                     : "text-text-secondary hover:text-text-primary"
@@ -945,7 +954,7 @@ export default function MyProfile() {
               </button>
 
               <button
-                className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-[12px] font-medium whitespace-nowrap transition-all ${
+                className={`shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-[12px] font-medium whitespace-nowrap transition-all ${
                   tab === "fotos"
                     ? "bg-bg-surface text-text-primary shadow-sm"
                     : "text-text-secondary hover:text-text-primary"
@@ -956,7 +965,7 @@ export default function MyProfile() {
               </button>
 
               <button
-                className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-[12px] font-medium whitespace-nowrap transition-all ${
+                className={`shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-[12px] font-medium whitespace-nowrap transition-all ${
                   tab === "intereses"
                     ? "bg-bg-surface text-text-primary shadow-sm"
                     : "text-text-secondary hover:text-text-primary"
@@ -965,14 +974,14 @@ export default function MyProfile() {
               >
                 <Heart size={14} /> Intereses
                 {interestsSelected.length > 0 && (
-                  <span className="min-w-[16px] h-[16px] px-1 rounded-full bg-accent text-bg text-[9.5px] font-bold flex items-center justify-center">
+                  <span className="min-w-4 h-4 px-1 rounded-full bg-accent text-bg text-[9.5px] font-bold flex items-center justify-center">
                     {interestsSelected.length}
                   </span>
                 )}
               </button>
 
               <button
-                className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-[12px] font-medium whitespace-nowrap transition-all ${
+                className={`shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-[12px] font-medium whitespace-nowrap transition-all ${
                   tab === "preguntas"
                     ? "bg-bg-surface text-text-primary shadow-sm"
                     : "text-text-secondary hover:text-text-primary"
@@ -981,21 +990,10 @@ export default function MyProfile() {
               >
                 <HelpCircle size={14} /> Preguntas
                 {myAnswers.length > 0 && (
-                  <span className="min-w-[16px] h-[16px] px-1 rounded-full bg-accent text-bg text-[9.5px] font-bold flex items-center justify-center">
+                  <span className="min-w-4 h-4 px-1 rounded-full bg-accent text-bg text-[9.5px] font-bold flex items-center justify-center">
                     {myAnswers.length}
                   </span>
                 )}
-              </button>
-
-              <button
-                className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-[12px] font-medium whitespace-nowrap transition-all ${
-                  tab === "tema"
-                    ? "bg-bg-surface text-text-primary shadow-sm"
-                    : "text-text-secondary hover:text-text-primary"
-                }`}
-                onClick={() => setTab("tema")}
-              >
-                <Palette size={14} /> Tema
               </button>
             </div>
 
@@ -1290,7 +1288,10 @@ export default function MyProfile() {
                       pos > 3 && (!photoLimits || photoLimits.pi < 3000);
 
                     return (
-                      <div key={pos} className="relative aspect-square rounded-xl overflow-hidden bg-bg-alt min-w-0">
+                      <div
+                        key={pos}
+                        className="relative aspect-square rounded-xl overflow-hidden bg-bg-alt min-w-0"
+                      >
                         {photo ? (
                           <>
                             <img
@@ -1417,7 +1418,7 @@ export default function MyProfile() {
                           <div className="text-[12px] font-semibold">
                             Sube tu video de presentación
                           </div>
-                          <div className="text-[10px] text-center max-w-[240px] leading-snug">
+                          <div className="text-[10px] text-center max-w-60 leading-snug">
                             MP4, MKV o WEBM · Máx. 15 segundos · 25MB
                           </div>
                         </>
@@ -1441,7 +1442,7 @@ export default function MyProfile() {
                     >
                       <Lock size={24} />
                       <div className="text-[12px] font-bold">5000 PI</div>
-                      <div className="text-[10px] text-center max-w-[220px] opacity-80 leading-snug">
+                      <div className="text-[10px] text-center max-w-55 opacity-80 leading-snug">
                         Necesitas 5000 PI para desbloquear el video de
                         presentación
                       </div>
@@ -1564,10 +1565,24 @@ export default function MyProfile() {
                   </span>
                 </div>
 
-                <p className="text-[12px] text-text-secondary mb-5">
-                  Elige hasta 3 preguntas para mostrar en tu perfil. Son las que
-                  más ayudan a romper el hielo 🧊
-                </p>
+                <div className="p-3.5 rounded-xl bg-accent/8 border border-accent/25 mb-5">
+                  <div className="flex items-start gap-2.5">
+                    <Sparkles
+                      size={14}
+                      className="text-accent-hover shrink-0 mt-0.5"
+                    />
+                    <div>
+                      <div className="text-[12.5px] font-bold text-text-primary mb-0.5">
+                        Tus respuestas son tu foto
+                      </div>
+                      <p className="text-[11.5px] text-text-secondary leading-relaxed">
+                        Como las fotos están ocultas hasta el match, lo único
+                        que los demás ven de ti es lo que dices. Elige 3
+                        preguntas y destaca la que mejor te represente ⭐
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
                 <div className="space-y-3">
                   {[0, 1, 2].map((slotIndex) => {
@@ -1612,15 +1627,46 @@ export default function MyProfile() {
                     return (
                       <div
                         key={`slot-${answerObj.question_id}`}
-                        className="border border-border rounded-xl p-3.5 bg-bg-surface"
+                        className={`border rounded-xl p-3.5 transition-colors ${
+                          answerObj.is_featured
+                            ? "border-amber-300 bg-amber-50/50"
+                            : "border-border bg-bg-surface"
+                        }`}
                       >
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div className="flex-1 min-w-0">
+                            {answerObj.is_featured && (
+                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400 text-amber-900 text-[9px] font-bold uppercase tracking-wider mb-1">
+                                <Star size={8} className="fill-amber-900" />
+                                Destacada en el Feed
+                              </div>
+                            )}
                             <div className="text-[12px] font-semibold text-text-primary leading-snug">
                               {question.text}
                             </div>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleSetFeatured(answerObj)}
+                              className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${
+                                answerObj.is_featured
+                                  ? "text-amber-500 bg-amber-100"
+                                  : "text-text-tertiary hover:text-amber-500 hover:bg-amber-50"
+                              }`}
+                              title={
+                                answerObj.is_featured
+                                  ? "Quitar de destacada"
+                                  : "Marcar como destacada"
+                              }
+                            >
+                              <Star
+                                size={12}
+                                className={
+                                  answerObj.is_featured ? "fill-amber-500" : ""
+                                }
+                              />
+                            </button>
                             <button
                               type="button"
                               onClick={() => handleOpenPicker(slotIndex)}
@@ -1648,14 +1694,14 @@ export default function MyProfile() {
                               e.target.value,
                             )
                           }
-                          maxLength={150}
+                          maxLength={30}
                           rows={2}
                           placeholder="Tu respuesta..."
-                          className="profile-field__textarea"
-                          style={{ minHeight: "60px" }}
+                          className="profile-field__textarea profile-field__textarea--plain"
                         />
                         <div className="profile-field__feedback profile-field__feedback--info">
-                          {(answerObj.answer || "").length} / 150
+                          {(answerObj.answer || "").length} / 30{" "}
+                          {/* Se limito un poco el espacio de caracteres permitidos */}
                         </div>
                       </div>
                     );
@@ -1679,72 +1725,6 @@ export default function MyProfile() {
                   )}
                   Guardar respuestas
                 </button>
-              </div>
-            )}
-
-            {/* === TAB TEMA === */}
-            {tab === "tema" && (
-              <div className="profile-card">
-                <div className="profile-card__header">
-                  <div className="profile-card__header-title">
-                    <Palette size={16} /> Tema de la app
-                  </div>
-                </div>
-                <p className="text-[12px] text-text-secondary mb-4">
-                  Elige el color que más te represente. Se aplica en toda la app
-                  y se guarda en tu cuenta.
-                </p>
-
-                <div className="grid grid-cols-4 gap-2.5">
-                  {THEMES.map((theme) => {
-                    const isLocked = theme.locked;
-                    const isSelected = currentTheme === theme.id;
-                    return (
-                      <button
-                        key={theme.id}
-                        disabled={isLocked}
-                        onClick={() => {
-                          if (isLocked) return;
-                          setCurrentTheme(theme.id);
-                        }}
-                        className={`relative flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${
-                          isLocked
-                            ? "border-border/40 bg-bg-alt/30 cursor-not-allowed opacity-50"
-                            : isSelected
-                              ? "border-text-primary bg-bg-alt"
-                              : "border-border hover:border-text-secondary hover:bg-bg-alt/50"
-                        }`}
-                      >
-                        <div
-                          className="w-7 h-7 rounded-full border-2 relative flex items-center justify-center"
-                          style={{
-                            backgroundColor: theme.color,
-                            borderColor: isSelected ? "#1A1A1A" : "transparent",
-                            filter: isLocked ? "grayscale(100%)" : "none",
-                          }}
-                        >
-                          {isLocked && (
-                            <span className="absolute inset-0 flex items-center justify-center text-white font-bold text-[14px] drop-shadow-md">
-                              ✕
-                            </span>
-                          )}
-                          {isSelected && !isLocked && (
-                            <Check
-                              size={14}
-                              className="text-white drop-shadow"
-                              strokeWidth={3}
-                            />
-                          )}
-                        </div>
-                        <span
-                          className={`text-[10px] font-medium ${isLocked ? "text-text-tertiary" : "text-text-secondary"}`}
-                        >
-                          {theme.name}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
               </div>
             )}
           </div>
@@ -1852,6 +1832,7 @@ export default function MyProfile() {
                 ))}
               </div>
             </div>
+            <MyEventArchives />
           </aside>
         </div>
       </div>
@@ -1870,7 +1851,7 @@ export default function MyProfile() {
       {/* Modal: elegir pregunta */}
       {pickerOpen && (
         <div
-          className="fixed inset-0 z-[300] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+          className="fixed inset-0 z-300 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
           onClick={() => {
             setPickerOpen(false);
             setPickerSlotIndex(null);
@@ -1982,7 +1963,7 @@ export default function MyProfile() {
       {/* Modal: elegir intereses */}
       {interestsPickerOpen && (
         <div
-          className="fixed inset-0 z-[300] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+          className="fixed inset-0 z-300 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
           onClick={() => {
             setInterestsPickerOpen(false);
             setInterestsSearch("");
@@ -2105,7 +2086,7 @@ export default function MyProfile() {
       {/* Modal: detalles del perfil */}
       {detailsOpen && (
         <div
-          className="fixed inset-0 z-[300] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-300 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={() => setDetailsOpen(false)}
         >
           <div

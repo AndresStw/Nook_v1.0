@@ -1,27 +1,18 @@
-import {
-  Search,
-  Bell,
-  ChevronDown,
-  Check,
-  LogOut,
-  Settings,
-  User,
-  Shield,
-  Volume2,
-  VolumeX,
-  Bug,
-} from "lucide-react";
+//prettier-ignore
+import { Search, Bell, ChevronDown, Check, LogOut, Settings, User, 
+Shield, Volume2, VolumeX, Bug, History, FileText , Shield as ShieldIcon} from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../hooks/useAuth";
 import { supabase } from "../../lib/supabase";
-import Logo from "../ui/Logo";
-import AdminGateModal from "../admin/AdminGateModal";
 import { useSound } from "../../hooks/useSound";
 import { useNotifications } from "../../hooks/useNotifications";
+import { CURRENT_VERSION } from "../../lib/changelog";
 import LogoutAnimation from "../auth/LogoutAnimation";
-import ReportBugButton from "../ui/ReportBugButton";
+import Logo from "../ui/Logo";
+import AdminGateModal from "../admin/AdminGateModal";
+import VersionHistoryModal from "../ui/VersionHistoryModal";
 
 const THEMES = [
   { id: "menta", name: "Menta", color: "#14E5C0" },
@@ -34,7 +25,7 @@ const THEMES = [
   { id: "default", name: "Default", color: "#173D38" },
 ];
 
-const ADMIN_EMAILS = ["nook.admin.bogota@gmail.com"];
+const ADMIN_EMAILS = ["nook.admin.bogota@gmail.com"]; //Solo founder por ahora agregar al equipo mas adelante
 
 //Componente
 export default function TopBar() {
@@ -48,20 +39,19 @@ export default function TopBar() {
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [avatarLoading, setAvatarLoading] = useState(true);
+  //prettier-ignore
   const menuRef = useRef(null);
+  //prettier-ignore
   const { muted, toggleMute, play } = useSound();
-  const { notifications, unreadCount, markAsRead, markAllAsRead } =
-    useNotifications();
+  //prettier-ignore
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef(null);
-  const isAdmin =
-    authUser?.email &&
-    ADMIN_EMAILS.includes(authUser.email) &&
-    profile?.role === "founder";
-  const [bugOpen, setBugOpen] = useState(false);
+  //prettier-ignore
+  const isAdmin = authUser?.email &&ADMIN_EMAILS.includes(authUser.email) && profile?.role === "founder";
+  const [versionModalOpen, setVersionModalOpen] = useState(false);
 
-  //Hook #1
-  // Cargar avatar
+  //Hook #1:Cargar avatar
   useEffect(() => {
     if (!profile?.id) return;
     setAvatarLoading(true);
@@ -77,8 +67,7 @@ export default function TopBar() {
       });
   }, [profile?.id]);
 
-  //Hook #2
-  // Cerrar dropdown al click afuera
+  //Hook #2:Cerrar dropdown al click afuera
   useEffect(() => {
     const handleClick = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -93,6 +82,7 @@ export default function TopBar() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  //Funciones
   const handleSubmit = (e) => {
     e.preventDefault();
     if (searchValue.trim().length >= 2) {
@@ -141,7 +131,7 @@ export default function TopBar() {
     <>
       <header className="topbar">
         {/* Logo solo en mobile */}
-        <Link to="/feed" className="md:hidden shrink-0">
+        <Link to="/feed" className="md:hidden shrink-0 text-accent">
           <Logo size={26} />
         </Link>
 
@@ -168,6 +158,7 @@ export default function TopBar() {
           >
             <Search size={17} strokeWidth={1.8} />
           </button>
+
           {/* Campana de notificaciones  */}
           <div className="relative" ref={notifRef}>
             <button
@@ -177,14 +168,14 @@ export default function TopBar() {
             >
               <Bell size={17} strokeWidth={1.8} />
               {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-error text-white text-[9px] font-bold flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-error text-white text-[9px] font-bold flex items-center justify-center">
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
             </button>
 
             {notifOpen && (
-              <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-[340px] max-h-[480px] bg-bg-surface border border-border rounded-2xl shadow-elevated overflow-hidden flex flex-col">
+              <div className="fixed sm:absolute right-2 sm:right-0 top-15 sm:top-[calc(100%+8px)] z-50 w-85 max-w-[calc(100vw-16px)] max-h-120 bg-bg-surface border border-border rounded-2xl shadow-elevated overflow-hidden flex flex-col">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border-soft shrink-0">
                   <div className="text-[13px] font-bold text-text-primary">
                     Notificaciones
@@ -252,6 +243,8 @@ export default function TopBar() {
               </div>
             )}
           </div>
+
+          {/* Seccion de botones  */}
           <button
             onClick={toggleMute}
             className="topbar__icon-btn"
@@ -275,7 +268,7 @@ export default function TopBar() {
                 className={`topbar__chevron ${menuOpen ? "topbar__chevron--open" : ""}`}
               />
             </button>
-
+            {/* DropDown */}
             {menuOpen && !showThemes && (
               <div className="topbar__dropdown">
                 <div className="topbar__dropdown-header">
@@ -323,14 +316,51 @@ export default function TopBar() {
                   <Settings size={14} /> Ajustes
                 </button>
 
+                {/* Reportar problema */}
                 <button
                   className="topbar__dropdown-item"
                   onClick={() => {
                     setMenuOpen(false);
-                    setBugOpen(true);
+                    window.dispatchEvent(new Event("nook:open-report-bug"));
                   }}
                 >
                   <Bug size={14} /> Reportar un problema
+                </button>
+
+                {/* Historial de versión */}
+                <button
+                  className="topbar__dropdown-item"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setVersionModalOpen(true);
+                  }}
+                >
+                  <History size={14} /> Historial de versión
+                  <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-accent/15 text-accent-hover">
+                    v{CURRENT_VERSION}
+                  </span>
+                </button>
+
+                {/* Políticas y tratamiento */}
+                <button
+                  className="topbar__dropdown-item"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    navigate("/settings?legal=terms");
+                  }}
+                >
+                  <FileText size={14} /> Políticas y tratamiento de datos
+                </button>
+
+                {/* Política de privacidad */}
+                <button
+                  className="topbar__dropdown-item"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    navigate("/settings?legal=privacy");
+                  }}
+                >
+                  <ShieldIcon size={14} /> Política de privacidad
                 </button>
 
                 {/* Admin - solo para el founder */}
@@ -402,13 +432,16 @@ export default function TopBar() {
         </div>
       </header>
 
+      {/* Modales */}
       <AdminGateModal
         open={adminModalOpen}
         onClose={() => setAdminModalOpen(false)}
       />
 
-      {/* Modal de reporte controlado desde el TopBar */}
-      <ReportBugButton open={bugOpen} onClose={() => setBugOpen(false)} />
+      <VersionHistoryModal
+        open={versionModalOpen}
+        onClose={() => setVersionModalOpen(false)}
+      />
     </>
   );
 }

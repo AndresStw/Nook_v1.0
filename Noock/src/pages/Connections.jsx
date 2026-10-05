@@ -1,21 +1,18 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  MessageCircle,
-  Heart,
-  Clock,
-  CheckCheck,
-  Archive,
-  Sparkles,
-} from "lucide-react";
+//prettier-ignore
+import { MessageCircle, Heart, Clock, CheckCheck, Archive,Sparkles,} from "lucide-react";
 import AppLayout from "../components/layout/AppLayout";
 import PiBadge from "../components/ui/PiBadge";
 import { useConnections } from "../hooks/useConnections";
+import { useDiscovery } from "../hooks/useDiscovery";
 
+//Componente
 export default function Connections() {
   const navigate = useNavigate();
   const { groups, loading } = useConnections();
   const [activeTab, setActiveTab] = useState("active");
+  useDiscovery("visit_connections");
 
   const tabs = [
     { id: "new", label: "Nuevos", icon: Sparkles, count: groups.new.length },
@@ -192,7 +189,7 @@ function ConnectionCard({ conn, onOpen }) {
               {conn.last_message || "Di hola 👋"}
             </p>
             {conn.unread_count > 0 && (
-              <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-text-primary text-bg text-[10px] font-semibold flex items-center justify-center shrink-0">
+              <span className="min-w-4.5 h-4.5 px-1 rounded-full bg-text-primary text-bg text-[10px] font-semibold flex items-center justify-center shrink-0">
                 {conn.unread_count > 9 ? "9+" : conn.unread_count}
               </span>
             )}
