@@ -283,3 +283,14 @@ Building games, applications and experimental systems.
 ---
 
 ⭐ If you find the project interesting, consider giving the
+
+## 📜 License
+
+© 2026 Andres Diaz / Axion Studios. All rights reserved.
+
+Nook is publicly available for portfolio, educational, and evaluation purposes.
+
+The source code, design, branding, assets, and original content of Nook may not be copied, redistributed, modified, or used commercially without explicit permission from the author.
+
+**Nook is not an open-source project.**
+
