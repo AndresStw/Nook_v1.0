@@ -6,6 +6,14 @@ Nook is a web application focused on creating a modern and interactive environme
 
 The project was built from the ground up with a focus on **user experience, modular architecture, authentication, real-time interactions and scalable frontend development**.
 
+## 🚀 Try Nook
+
+**The application is currently available online.**
+
+👉 **[Launch Nook](https://nook-v1-6-0.vercel.app/)**
+
+Explore the application and experience the interface directly in your browser.
+
 ---
 
 ## ✨ Overview
