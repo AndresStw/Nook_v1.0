@@ -51,7 +51,11 @@ Nook was designed with a responsive and modern interface focused on keeping navi
 ### 👤 User Profiles
 
 <p align="center">
-  <img width="100%" src="https://github.com/user-attachments/assets/22c9cfa2-56fd-44df-9e23-1391ff5f592d" />
+  <img
+    width="100%"
+    src="https://github.com/user-attachments/assets/e385effd-9512-4d2b-8b2d-4c56abbd5969"
+    alt="Nook interface"
+  />
 </p>
 
 ---
