@@ -1,6 +1,6 @@
 
 <div align="center">
-  <img src="./public/logo.svg" alt="Nook" width="120" />
+  <img src="public/logo-readme.svg" alt="Nook" width="180" />
 </div>
 # 🏠 Nook
 
