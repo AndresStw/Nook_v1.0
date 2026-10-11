@@ -1,3 +1,7 @@
+
+<div align="center">
+  <img src="./public/logo.svg" alt="Nook" width="120" />
+</div>
 # 🏠 Nook
 
 ### A modern social platform built to connect people through meaningful interactions.
